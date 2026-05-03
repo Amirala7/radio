@@ -15,6 +15,7 @@ import 'features/favorites/domain/usecases/toggle_favorite_use_case.dart';
 import 'features/favorites/domain/usecases/watch_favorites_use_case.dart';
 import 'features/favorites/presentation/view_models/favorites_view_model.dart';
 import 'features/genres/domain/usecases/list_genres_use_case.dart';
+import 'features/home/presentation/view_models/home_view_model.dart';
 import 'features/genres/presentation/view_models/genres_view_model.dart';
 import 'features/player/domain/usecases/pause_use_case.dart';
 import 'features/player/domain/usecases/play_station_use_case.dart';
@@ -79,6 +80,12 @@ class RadioApp extends StatelessWidget {
             resume: ResumeUseCase(di()),
             stop: StopUseCase(di()),
           ),
+        ),
+        ChangeNotifierProxyProvider<StationsViewModel, HomeViewModel>(
+          create: (ctx) =>
+              HomeViewModel(stations: ctx.read<StationsViewModel>()),
+          update: (_, stations, prev) =>
+              prev ?? HomeViewModel(stations: stations),
         ),
       ],
       child: MaterialApp(
