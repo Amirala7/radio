@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "880719812759",
+    "project_id": "customlabs-1b5dd",
+    "storage_bucket": "customlabs-1b5dd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:880719812759:android:e46e6f0e72bee2a077b1d2",
+        "android_client_info": {
+          "package_name": "com.example.radio"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1lEodr5-0xfgq4Y8vnRXQ9xBFgDH8oEA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

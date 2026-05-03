@@ -1,0 +1,26 @@
+import { onCall } from "firebase-functions/v2/https";
+import { requireAuth } from "../lib/auth";
+import { cacheKey, withCache } from "../lib/cache";
+import { asObject, optionalInt, requiredString } from "../lib/input";
+import { normalizePage } from "../lib/normalize";
+import { RAPIDAPI_KEY, rapidApiGet } from "../lib/rapidapi";
+import type { Page, Station } from "../lib/types";
+
+const TTL_SECONDS = 60 * 60; // 1h
+
+export const searchStations = onCall(
+  { secrets: [RAPIDAPI_KEY] },
+  async (request) => {
+    requireAuth(request);
+    const d = asObject(request.data);
+    const q = requiredString(d.q, "q");
+    const page = optionalInt(d.page, "page", 1, 1000) ?? 1;
+    const limit = optionalInt(d.limit, "limit", 1, 100) ?? 20;
+
+    const key = cacheKey("searchStations", { q, page, limit });
+    return withCache<Page<Station>>(key, TTL_SECONDS, async () => {
+      const raw = await rapidApiGet("/radios/search", { q, page, limit });
+      return normalizePage(raw, page, limit);
+    });
+  },
+);
