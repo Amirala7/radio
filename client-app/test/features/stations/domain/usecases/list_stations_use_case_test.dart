@@ -31,6 +31,6 @@ void main() {
   test('propagates failures from the repo', () async {
     when(() => repo.listStations(page: 1, limit: 20))
         .thenThrow(const NetworkFailure());
-    await expectLater(() => useCase(), throwsA(isA<NetworkFailure>()));
+    await expectLater(useCase(), throwsA(isA<NetworkFailure>()));
   });
 }

@@ -11,6 +11,6 @@ class SearchStationsUseCase {
     required String query,
     int page = 1,
     int limit = 20,
-  }) =>
+  }) async =>
       _repository.searchStations(query: query, page: page, limit: limit);
 }

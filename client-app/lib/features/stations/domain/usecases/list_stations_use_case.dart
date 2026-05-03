@@ -7,6 +7,6 @@ class ListStationsUseCase {
 
   final StationRepository _repository;
 
-  Future<Page<Station>> call({int page = 1, int limit = 20}) =>
+  Future<Page<Station>> call({int page = 1, int limit = 20}) async =>
       _repository.listStations(page: page, limit: limit);
 }

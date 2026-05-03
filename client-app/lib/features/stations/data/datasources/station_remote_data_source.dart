@@ -21,7 +21,7 @@ class StationRemoteDataSource {
     int limit = 20,
   }) =>
       _callPage('popularStations', {
-        if (country != null) 'country': country,
+        'country': ?country,
         'page': page,
         'limit': limit,
       });
@@ -44,8 +44,8 @@ class StationRemoteDataSource {
     int limit = 20,
   }) =>
       _callPage('stationsByGenre', {
-        if (genreId != null) 'genreId': genreId,
-        if (genreSlug != null) 'genreSlug': genreSlug,
+        'genreId': ?genreId,
+        'genreSlug': ?genreSlug,
         'page': page,
         'limit': limit,
       });

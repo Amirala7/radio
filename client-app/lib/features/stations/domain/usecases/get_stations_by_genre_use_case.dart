@@ -12,7 +12,7 @@ class GetStationsByGenreUseCase {
     String? genreSlug,
     int page = 1,
     int limit = 20,
-  }) =>
+  }) async =>
       _repository.stationsByGenre(
         genreId: genreId,
         genreSlug: genreSlug,

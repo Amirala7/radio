@@ -11,6 +11,6 @@ class GetPopularStationsUseCase {
     String? country,
     int page = 1,
     int limit = 20,
-  }) =>
+  }) async =>
       _repository.popularStations(country: country, page: page, limit: limit);
 }
