@@ -2,8 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get_it/get_it.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../audio/sfx_player.dart';
 import '../auth/auth_service.dart';
+import '../haptics/haptics.dart';
 import '../network/cloud_functions_client.dart';
+import '../volume/system_volume_sink.dart';
+import '../volume/volume_controller.dart';
 import '../../features/favorites/data/datasources/favorites_remote_data_source.dart';
 import '../../features/favorites/data/repositories/favorites_repository_impl.dart';
 import '../../features/favorites/domain/repositories/favorites_repository.dart';
@@ -50,5 +54,15 @@ void configureDependencies({required AuthService authService}) {
   );
   di.registerLazySingleton<PlayerRepository>(
     () => PlayerRepositoryImpl(di()),
+  );
+
+  di.registerLazySingleton<SfxPlayer>(SfxPlayer.new);
+  di.registerLazySingleton<Haptics>(() => const Haptics());
+  di.registerLazySingleton<SystemVolumeSink>(PluginSystemVolumeSink.new);
+  di.registerLazySingleton<VolumeController>(
+    () => VolumeController(
+      player: di<PlayerRepository>(),
+      system: di<SystemVolumeSink>(),
+    ),
   );
 }

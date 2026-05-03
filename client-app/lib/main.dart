@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:provider/provider.dart';
 
+import 'core/audio/sfx_player.dart';
 import 'core/auth/auth_service.dart';
 import 'core/di/dependencies.dart';
 import 'core/theme/app_spacing.dart';
@@ -36,6 +37,7 @@ Future<void> main() async {
   await auth.ensureSignedIn();
 
   configureDependencies(authService: auth);
+  await GetIt.I<SfxPlayer>().init();
 
   runApp(const RadioApp());
 }
