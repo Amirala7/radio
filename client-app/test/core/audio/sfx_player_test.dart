@@ -10,109 +10,78 @@ void main() {
     registerFallbackValue(LoopMode.off);
   });
 
-  late Map<SfxId, _MockAudioPlayer> players;
+  late List<_MockAudioPlayer> created;
   late SfxPlayer sfx;
 
   setUp(() {
-    players = {for (final id in SfxId.values) id: _MockAudioPlayer()};
-    for (final p in players.values) {
-      when(() => p.setAsset(any())).thenAnswer((_) async => Duration.zero);
-      when(() => p.setLoopMode(any())).thenAnswer((_) async {});
-      when(() => p.setVolume(any())).thenAnswer((_) async {});
-      when(() => p.seek(any())).thenAnswer((_) async {});
-      when(() => p.play()).thenAnswer((_) async {});
-      when(() => p.pause()).thenAnswer((_) async {});
-      when(() => p.stop()).thenAnswer((_) async {});
-      when(() => p.dispose()).thenAnswer((_) async {});
-    }
-    sfx = SfxPlayer(playerFactory: (id) => players[id]!);
+    created = [];
+    sfx = SfxPlayer(
+      playerFactory: () {
+        final p = _MockAudioPlayer();
+        when(() => p.setAsset(any())).thenAnswer((_) async => Duration.zero);
+        when(() => p.setLoopMode(any())).thenAnswer((_) async {});
+        when(() => p.seek(any())).thenAnswer((_) async {});
+        when(() => p.play()).thenAnswer((_) async {});
+        when(() => p.dispose()).thenAnswer((_) async {});
+        created.add(p);
+        return p;
+      },
+    );
   });
 
-  test('init pre-loads each asset on its dedicated player', () async {
+  test('init creates one player per one-shot SFX and loads its asset', () async {
     await sfx.init();
-    for (final entry in players.entries) {
-      verify(
-        () => entry.value.setAsset(SfxPlayer.assetFor(entry.key)),
-      ).called(1);
-    }
+    expect(created.length, 2);
+    verify(
+      () => created[0].setAsset(SfxPlayer.assetFor(SfxId.click)),
+    ).called(1);
+    verify(
+      () => created[1].setAsset(SfxPlayer.assetFor(SfxId.switchKnob)),
+    ).called(1);
   });
 
-  test('playOnce seeks to zero then plays', () async {
+  test('playOnce seeks the matching pre-loaded player and plays', () async {
     await sfx.init();
     await sfx.playOnce(SfxId.click);
     verifyInOrder([
-      () => players[SfxId.click]!.seek(Duration.zero),
-      () => players[SfxId.click]!.play(),
+      () => created[0].seek(Duration.zero),
+      () => created[0].play(),
     ]);
   });
 
-  test(
-    'startLoop enables LoopMode.one, seeks to zero, and plays',
-    () async {
-      await sfx.init();
-      await sfx.startLoop(SfxId.tuning1);
-      verifyInOrder([
-        () => players[SfxId.tuning1]!.setLoopMode(LoopMode.one),
-        () => players[SfxId.tuning1]!.seek(Duration.zero),
-        () => players[SfxId.tuning1]!.play(),
-      ]);
-    },
-  );
-
-  test(
-    'stopLoop hard-stops every tuning player (volume 0, loop off, stop)',
-    () async {
-      await sfx.init();
-      await sfx.startLoop(SfxId.tuning1);
-      await sfx.stopLoop();
-      verify(() => players[SfxId.tuning1]!.setVolume(0)).called(greaterThan(0));
-      verify(
-        () => players[SfxId.tuning1]!.setLoopMode(LoopMode.off),
-      ).called(greaterThan(0));
-      verify(() => players[SfxId.tuning1]!.stop()).called(greaterThan(0));
-      verifyNever(() => players[SfxId.click]!.stop());
-      verifyNever(() => players[SfxId.switchKnob]!.stop());
-    },
-  );
-
-  test(
-    'stopLoop fired before startLoop runs preempts the start (no play)',
-    () async {
-      await sfx.init();
-
-      // Fire start without awaiting — the synchronous flag is set, but
-      // the chained _reconcile hasn't run yet.
-      // ignore: unawaited_futures
-      sfx.startLoop(SfxId.tuning1);
-
-      // Stop before _reconcile runs. Synchronously flips the intent.
-      await sfx.stopLoop();
-
-      // play() must not have been invoked — by the time _reconcile ran,
-      // the intent was already 'stop'.
-      verifyNever(() => players[SfxId.tuning1]!.play());
-      // And both tuning players were hard-stopped defensively.
-      verify(() => players[SfxId.tuning1]!.stop()).called(greaterThan(0));
-    },
-  );
-
-  test(
-    'stop after start and reconcile actually stops the running loop',
-    () async {
-      await sfx.init();
-      await sfx.startLoop(SfxId.tuning1); // fully reconciled — playing.
-      verify(() => players[SfxId.tuning1]!.play()).called(1);
-
-      await sfx.stopLoop();
-      verify(() => players[SfxId.tuning1]!.setVolume(0)).called(greaterThan(0));
-      verify(() => players[SfxId.tuning1]!.stop()).called(greaterThan(0));
-    },
-  );
-
-  test('dispose disposes every player', () async {
+  test('startLoop creates a fresh player, sets it up, and plays', () async {
     await sfx.init();
+    await sfx.startLoop(SfxId.tuning1);
+    final loop = created.last;
+    verify(
+      () => loop.setAsset(SfxPlayer.assetFor(SfxId.tuning1)),
+    ).called(1);
+    verify(() => loop.setLoopMode(LoopMode.one)).called(1);
+    verify(() => loop.play()).called(1);
+  });
+
+  test('stopLoop disposes the active loop player', () async {
+    await sfx.init();
+    await sfx.startLoop(SfxId.tuning1);
+    final loop = created.last;
+    await sfx.stopLoop();
+    verify(() => loop.dispose()).called(1);
+  });
+
+  test('startLoop disposes the previous loop before creating a new one', () async {
+    await sfx.init();
+    await sfx.startLoop(SfxId.tuning1);
+    final first = created.last;
+    await sfx.startLoop(SfxId.tuning3);
+    verify(() => first.dispose()).called(1);
+    expect(created.length, 4); // 2 one-shots + 2 loops
+  });
+
+  test('dispose tears down every player', () async {
+    await sfx.init();
+    await sfx.startLoop(SfxId.tuning1);
     await sfx.dispose();
-    for (final p in players.values) {
+    for (final p in created) {
       verify(() => p.dispose()).called(1);
     }
   });
