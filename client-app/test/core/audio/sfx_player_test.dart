@@ -18,6 +18,7 @@ void main() {
     for (final p in players.values) {
       when(() => p.setAsset(any())).thenAnswer((_) async => Duration.zero);
       when(() => p.setLoopMode(any())).thenAnswer((_) async {});
+      when(() => p.setVolume(any())).thenAnswer((_) async {});
       when(() => p.seek(any())).thenAnswer((_) async {});
       when(() => p.play()).thenAnswer((_) async {});
       when(() => p.pause()).thenAnswer((_) async {});
@@ -59,17 +60,18 @@ void main() {
   );
 
   test(
-    'stopLoop pauses and rewinds every tuning player',
+    'stopLoop hard-stops every tuning player (volume 0, loop off, stop)',
     () async {
       await sfx.init();
       await sfx.startLoop(SfxId.tuning1);
       await sfx.stopLoop();
-      verify(() => players[SfxId.tuning1]!.pause()).called(greaterThan(0));
+      verify(() => players[SfxId.tuning1]!.setVolume(0)).called(greaterThan(0));
       verify(
-        () => players[SfxId.tuning1]!.seek(Duration.zero),
+        () => players[SfxId.tuning1]!.setLoopMode(LoopMode.off),
       ).called(greaterThan(0));
-      verifyNever(() => players[SfxId.click]!.pause());
-      verifyNever(() => players[SfxId.switchKnob]!.pause());
+      verify(() => players[SfxId.tuning1]!.stop()).called(greaterThan(0));
+      verifyNever(() => players[SfxId.click]!.stop());
+      verifyNever(() => players[SfxId.switchKnob]!.stop());
     },
   );
 
@@ -89,8 +91,8 @@ void main() {
       // play() must not have been invoked — by the time _reconcile ran,
       // the intent was already 'stop'.
       verifyNever(() => players[SfxId.tuning1]!.play());
-      // And both tuning players were paused defensively.
-      verify(() => players[SfxId.tuning1]!.pause()).called(greaterThan(0));
+      // And both tuning players were hard-stopped defensively.
+      verify(() => players[SfxId.tuning1]!.stop()).called(greaterThan(0));
     },
   );
 
@@ -102,7 +104,8 @@ void main() {
       verify(() => players[SfxId.tuning1]!.play()).called(1);
 
       await sfx.stopLoop();
-      verify(() => players[SfxId.tuning1]!.pause()).called(greaterThan(0));
+      verify(() => players[SfxId.tuning1]!.setVolume(0)).called(greaterThan(0));
+      verify(() => players[SfxId.tuning1]!.stop()).called(greaterThan(0));
     },
   );
 

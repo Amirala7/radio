@@ -84,33 +84,41 @@ class SfxPlayer {
     );
 
     if (wantPlaying && desired != null) {
-      // Pause any other loop player.
+      // Hard-stop any other loop player.
       for (final id in _loopIds) {
         if (id == desired) continue;
-        await _safePause(_players[id]);
+        await _hardStop(_players[id]);
       }
       final p = _players[desired];
       if (p == null) return;
+      await p.setVolume(1);
       await p.setLoopMode(LoopMode.one);
       await p.seek(Duration.zero);
       await p.play();
       return;
     }
 
-    // Stop intent — pause every loop player, regardless of which we
-    // think was active. Cheap insurance against drift.
+    // Stop intent — hard-stop every loop player, regardless of which
+    // one we think was active. Cheap insurance against drift.
     for (final id in _loopIds) {
-      await _safePause(_players[id]);
+      await _hardStop(_players[id]);
     }
   }
 
-  Future<void> _safePause(AudioPlayer? p) async {
+  /// Kills audio output as fast as possible, then resets for next start.
+  /// `setVolume(0)` silences the buffer instantly even if the platform
+  /// pause/stop call lags. Loop mode is cleared so the player can't
+  /// auto-restart from a queued buffer cycle.
+  Future<void> _hardStop(AudioPlayer? p) async {
     if (p == null) return;
     try {
+      await p.setVolume(0);
+      await p.setLoopMode(LoopMode.off);
       await p.pause();
+      await p.stop();
       await p.seek(Duration.zero);
     } catch (e) {
-      developer.log('pause failed: $e', name: _logName, error: e);
+      developer.log('hardStop failed: $e', name: _logName, error: e);
     }
   }
 
