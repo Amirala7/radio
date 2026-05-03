@@ -1,6 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 
 import '../../../../core/network/cloud_functions_client.dart';
+import '../../../../core/network/json_coercion.dart';
 import '../../../../core/pagination/page_dto.dart';
 import '../models/station_dto.dart';
 
@@ -47,17 +48,10 @@ class StationRemoteDataSource {
     final HttpsCallableResult<Object?> result = await _client
         .call(name)
         .call<Object?>(args);
-    final json = _asJsonMap(result.data);
+    final json = coerceJsonMap(result.data);
     return PageDto<StationDto>.fromJson(
       json,
-      (v) => StationDto.fromJson(_asJsonMap(v)),
-    );
-  }
-
-  Map<String, dynamic> _asJsonMap(Object? raw) {
-    if (raw is Map) return raw.cast<String, dynamic>();
-    throw StateError(
-      'Expected a Map from cloud function, got ${raw.runtimeType}',
+      (v) => StationDto.fromJson(coerceJsonMap(v)),
     );
   }
 }

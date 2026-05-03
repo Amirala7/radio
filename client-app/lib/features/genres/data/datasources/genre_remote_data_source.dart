@@ -1,6 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 
 import '../../../../core/network/cloud_functions_client.dart';
+import '../../../../core/network/json_coercion.dart';
 import '../../../../core/pagination/page_dto.dart';
 import '../models/genre_dto.dart';
 
@@ -13,10 +14,10 @@ class GenreRemoteDataSource {
     final HttpsCallableResult<Object?> result = await _client
         .call('listGenres')
         .call<Object?>({'page': page, 'limit': limit});
-    final json = (result.data! as Map).cast<String, dynamic>();
+    final json = coerceJsonMap(result.data);
     return PageDto<GenreDto>.fromJson(
       json,
-      (v) => GenreDto.fromJson((v! as Map).cast<String, dynamic>()),
+      (v) => GenreDto.fromJson(coerceJsonMap(v)),
     );
   }
 }
