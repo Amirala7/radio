@@ -16,8 +16,8 @@ class GenreRepositoryImpl implements GenreRepository {
     try {
       final dto = await _dataSource.listGenres(page: page, limit: limit);
       return dto.toEntity((g) => g.toEntity());
-    } catch (e) {
-      throw mapException(e);
+    } catch (e, st) {
+      throw mapException(e, st);
     }
   }
 }

@@ -30,7 +30,9 @@ class FavoritesRepositoryImpl implements FavoritesRepository {
     return _dataSource
         .watchAll(uid)
         .map((dtos) => dtos.map((d) => d.toEntity()).toList())
-        .handleError((Object e) => throw mapException(e));
+        .handleError(
+          (Object e, StackTrace st) => throw mapException(e, st),
+        );
   }
 
   @override
@@ -41,7 +43,9 @@ class FavoritesRepositoryImpl implements FavoritesRepository {
     }
     return _dataSource
         .watchIsFavorite(uid, stationId)
-        .handleError((Object e) => throw mapException(e));
+        .handleError(
+          (Object e, StackTrace st) => throw mapException(e, st),
+        );
   }
 
   @override
@@ -51,8 +55,8 @@ class FavoritesRepositoryImpl implements FavoritesRepository {
     final dto = station.toFavoriteDto(addedAt: DateTime.now());
     try {
       await _dataSource.add(uid, dto);
-    } catch (e) {
-      throw mapException(e);
+    } catch (e, st) {
+      throw mapException(e, st);
     }
   }
 
@@ -62,8 +66,8 @@ class FavoritesRepositoryImpl implements FavoritesRepository {
     if (uid == null) throw const UnauthenticatedFailure();
     try {
       await _dataSource.remove(uid, stationId);
-    } catch (e) {
-      throw mapException(e);
+    } catch (e, st) {
+      throw mapException(e, st);
     }
   }
 }

@@ -65,8 +65,8 @@ class StationRepositoryImpl implements StationRepository {
   Future<T> _guarded<T>(Future<T> Function() action) async {
     try {
       return await action();
-    } catch (e) {
-      throw mapException(e);
+    } catch (e, st) {
+      throw mapException(e, st);
     }
   }
 }
