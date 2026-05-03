@@ -23,5 +23,16 @@ AppFailure mapException(Object error) {
   if (error is FirebaseAuthException) {
     return const UnauthenticatedFailure();
   }
+  if (error is FirebaseException) {
+    switch (error.code) {
+      case 'permission-denied':
+        return const UnauthenticatedFailure();
+      case 'unavailable':
+      case 'deadline-exceeded':
+        return const NetworkFailure();
+      default:
+        return UnknownFailure(error.message ?? error.code);
+    }
+  }
   return UnknownFailure(error.toString());
 }
