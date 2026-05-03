@@ -25,8 +25,9 @@ void main() {
   });
 
   test('returns mapped Page<Genre> on success', () async {
-    when(() => ds.listGenres(page: 1, limit: 100))
-        .thenAnswer((_) async => samplePage);
+    when(
+      () => ds.listGenres(page: 1, limit: 100),
+    ).thenAnswer((_) async => samplePage);
     final page = await repo.listGenres();
     expect(page.data.first.id, 1);
     expect(page.data.first.name, 'Rock');
@@ -36,19 +37,23 @@ void main() {
     when(() => ds.listGenres(page: 1, limit: 100)).thenThrow(
       FirebaseFunctionsException(message: '', code: 'unauthenticated'),
     );
-    await expectLater(repo.listGenres(), throwsA(isA<UnauthenticatedFailure>()));
+    await expectLater(
+      repo.listGenres(),
+      throwsA(isA<UnauthenticatedFailure>()),
+    );
   });
 
   test('maps unavailable to NetworkFailure', () async {
-    when(() => ds.listGenres(page: 1, limit: 100)).thenThrow(
-      FirebaseFunctionsException(message: '', code: 'unavailable'),
-    );
+    when(
+      () => ds.listGenres(page: 1, limit: 100),
+    ).thenThrow(FirebaseFunctionsException(message: '', code: 'unavailable'));
     await expectLater(repo.listGenres(), throwsA(isA<NetworkFailure>()));
   });
 
   test('maps arbitrary exceptions to UnknownFailure', () async {
-    when(() => ds.listGenres(page: 1, limit: 100))
-        .thenThrow(StateError('boom'));
+    when(
+      () => ds.listGenres(page: 1, limit: 100),
+    ).thenThrow(StateError('boom'));
     await expectLater(repo.listGenres(), throwsA(isA<UnknownFailure>()));
   });
 }

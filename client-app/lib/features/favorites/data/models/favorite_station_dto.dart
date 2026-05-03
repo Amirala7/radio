@@ -35,10 +35,7 @@ abstract class FavoriteStationDto with _$FavoriteStationDto {
 }
 
 extension FavoriteStationDtoMap on FavoriteStationDto {
-  Map<String, dynamic> toMap() => {
-        ...station.toJson(),
-        'addedAt': addedAt,
-      };
+  Map<String, dynamic> toMap() => {...station.toJson(), 'addedAt': addedAt};
 }
 
 Map<String, dynamic> _deepJsonMap(Map<dynamic, dynamic> source) =>

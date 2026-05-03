@@ -43,18 +43,11 @@ void configureDependencies({required AuthService authService}) {
   di.registerLazySingleton<StationRepository>(
     () => StationRepositoryImpl(di()),
   );
-  di.registerLazySingleton<GenreRepository>(
-    () => GenreRepositoryImpl(di()),
-  );
+  di.registerLazySingleton<GenreRepository>(() => GenreRepositoryImpl(di()));
   di.registerLazySingleton<FavoritesRepository>(
-    () => FavoritesRepositoryImpl(
-      dataSource: di(),
-      authService: di(),
-    ),
+    () => FavoritesRepositoryImpl(dataSource: di(), authService: di()),
   );
-  di.registerLazySingleton<PlayerRepository>(
-    () => PlayerRepositoryImpl(di()),
-  );
+  di.registerLazySingleton<PlayerRepository>(() => PlayerRepositoryImpl(di()));
 
   di.registerLazySingleton<SfxPlayer>(SfxPlayer.new);
   di.registerLazySingleton<Haptics>(() => const Haptics());

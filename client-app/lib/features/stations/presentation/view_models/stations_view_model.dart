@@ -15,10 +15,10 @@ class StationsViewModel extends ChangeNotifier {
     required GetPopularStationsUseCase popularStations,
     required SearchStationsUseCase searchStations,
     required GetStationsByGenreUseCase stationsByGenre,
-  })  : _listStations = listStations,
-        _popularStations = popularStations,
-        _searchStations = searchStations,
-        _stationsByGenre = stationsByGenre;
+  }) : _listStations = listStations,
+       _popularStations = popularStations,
+       _searchStations = searchStations,
+       _stationsByGenre = stationsByGenre;
 
   final ListStationsUseCase _listStations;
   final GetPopularStationsUseCase _popularStations;

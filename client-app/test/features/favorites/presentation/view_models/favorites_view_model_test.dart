@@ -12,8 +12,11 @@ import 'package:radio/features/favorites/presentation/view_models/favorites_view
 import 'package:radio/features/stations/domain/entities/station.dart';
 
 class _MockWatch extends Mock implements WatchFavoritesUseCase {}
+
 class _MockAdd extends Mock implements AddFavoriteUseCase {}
+
 class _MockRemove extends Mock implements RemoveFavoriteUseCase {}
+
 class _MockToggle extends Mock implements ToggleFavoriteUseCase {}
 
 void main() {
@@ -90,17 +93,19 @@ void main() {
     verify(() => toggle(station)).called(1);
   });
 
-  test('stream error populates state.error and preserves prior items',
-      () async {
-    controller.add([fav]);
-    await Future<void>.delayed(Duration.zero);
+  test(
+    'stream error populates state.error and preserves prior items',
+    () async {
+      controller.add([fav]);
+      await Future<void>.delayed(Duration.zero);
 
-    controller.addError(const NetworkFailure());
-    await Future<void>.delayed(Duration.zero);
+      controller.addError(const NetworkFailure());
+      await Future<void>.delayed(Duration.zero);
 
-    expect(vm.state.error, isA<NetworkFailure>());
-    expect(vm.state.items, [fav]); // preserved
-  });
+      expect(vm.state.error, isA<NetworkFailure>());
+      expect(vm.state.items, [fav]); // preserved
+    },
+  );
 
   test('add propagates AppFailure to state.error', () async {
     when(() => add(any())).thenThrow(const NetworkFailure());

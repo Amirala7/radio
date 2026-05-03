@@ -3,7 +3,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:radio/features/player/data/datasources/audio_player_data_source.dart';
 import 'package:radio/features/player/data/repositories/player_repository_impl.dart';
 
-class _MockAudioPlayerDataSource extends Mock implements AudioPlayerDataSource {}
+class _MockAudioPlayerDataSource extends Mock
+    implements AudioPlayerDataSource {}
 
 void main() {
   late _MockAudioPlayerDataSource ds;

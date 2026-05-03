@@ -19,10 +19,12 @@ void main() {
   });
 
   test('forwards country, page, limit', () async {
-    when(() => repo.popularStations(country: 'GB', page: 1, limit: 20))
-        .thenAnswer((_) async => page);
+    when(
+      () => repo.popularStations(country: 'GB', page: 1, limit: 20),
+    ).thenAnswer((_) async => page);
     await useCase(country: 'GB');
-    verify(() => repo.popularStations(country: 'GB', page: 1, limit: 20))
-        .called(1);
+    verify(
+      () => repo.popularStations(country: 'GB', page: 1, limit: 20),
+    ).called(1);
   });
 }

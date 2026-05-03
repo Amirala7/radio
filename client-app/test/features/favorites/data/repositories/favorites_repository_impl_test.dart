@@ -40,10 +40,7 @@ void main() {
   group('uid guard', () {
     test('watchAll emits UnauthenticatedFailure when no user', () {
       when(() => auth.currentUser).thenReturn(null);
-      expectLater(
-        repo.watchAll(),
-        emitsError(isA<UnauthenticatedFailure>()),
-      );
+      expectLater(repo.watchAll(), emitsError(isA<UnauthenticatedFailure>()));
     });
 
     test('isFavorite emits UnauthenticatedFailure when no user', () {
@@ -64,10 +61,7 @@ void main() {
 
     test('remove throws when no user', () async {
       when(() => auth.currentUser).thenReturn(null);
-      await expectLater(
-        repo.remove(1),
-        throwsA(isA<UnauthenticatedFailure>()),
-      );
+      await expectLater(repo.remove(1), throwsA(isA<UnauthenticatedFailure>()));
     });
   });
 
@@ -87,8 +81,9 @@ void main() {
 
   group('isFavorite', () {
     test('forwards uid and stationId', () async {
-      when(() => ds.watchIsFavorite('u1', 7))
-          .thenAnswer((_) => Stream.value(true));
+      when(
+        () => ds.watchIsFavorite('u1', 7),
+      ).thenAnswer((_) => Stream.value(true));
       final v = await repo.isFavorite(7).first;
       expect(v, isTrue);
       verify(() => ds.watchIsFavorite('u1', 7)).called(1);
@@ -99,9 +94,9 @@ void main() {
     test('writes a FavoriteStationDto with the station id', () async {
       when(() => ds.add('u1', any())).thenAnswer((_) async {});
       await repo.add(const Station(id: 42, name: 'X', streams: []));
-      final captured = verify(() => ds.add('u1', captureAny()))
-          .captured
-          .single as FavoriteStationDto;
+      final captured =
+          verify(() => ds.add('u1', captureAny())).captured.single
+              as FavoriteStationDto;
       expect(captured.station.id, 42);
     });
 

@@ -12,9 +12,13 @@ import 'package:radio/features/player/presentation/view_models/player_view_model
 import 'package:radio/features/stations/domain/entities/station.dart';
 
 class _MockWatch extends Mock implements WatchPlaybackUseCase {}
+
 class _MockPlay extends Mock implements PlayStationUseCase {}
+
 class _MockPause extends Mock implements PauseUseCase {}
+
 class _MockResume extends Mock implements ResumeUseCase {}
+
 class _MockStop extends Mock implements StopUseCase {}
 
 void main() {
@@ -68,10 +72,12 @@ void main() {
   });
 
   test('mirrors emitted PlaybackState', () async {
-    controller.add(const PlaybackState(
-      status: PlaybackStatus.playing,
-      currentStation: station,
-    ));
+    controller.add(
+      const PlaybackState(
+        status: PlaybackStatus.playing,
+        currentStation: station,
+      ),
+    );
     await Future<void>.delayed(Duration.zero);
 
     expect(vm.state.status, PlaybackStatus.playing);
@@ -84,10 +90,9 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     expect(vm.isLoading, true);
 
-    controller.add(const PlaybackState(
-      status: PlaybackStatus.playing,
-      isBuffering: true,
-    ));
+    controller.add(
+      const PlaybackState(status: PlaybackStatus.playing, isBuffering: true),
+    );
     await Future<void>.delayed(Duration.zero);
     expect(vm.isLoading, true);
 

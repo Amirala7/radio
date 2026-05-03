@@ -9,15 +9,10 @@ class GenreRemoteDataSource {
 
   final CloudFunctionsClient _client;
 
-  Future<PageDto<GenreDto>> listGenres({
-    int page = 1,
-    int limit = 100,
-  }) async {
-    final HttpsCallableResult<Object?> result =
-        await _client.call('listGenres').call<Object?>({
-      'page': page,
-      'limit': limit,
-    });
+  Future<PageDto<GenreDto>> listGenres({int page = 1, int limit = 100}) async {
+    final HttpsCallableResult<Object?> result = await _client
+        .call('listGenres')
+        .call<Object?>({'page': page, 'limit': limit});
     final json = (result.data! as Map).cast<String, dynamic>();
     return PageDto<GenreDto>.fromJson(
       json,

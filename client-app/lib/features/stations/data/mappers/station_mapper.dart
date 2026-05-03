@@ -26,13 +26,13 @@ extension CoordinatesDtoX on CoordinatesDto {
 
 extension StationLocationDtoX on StationLocationDto {
   StationLocation toEntity() => StationLocation(
-        cityId: cityId,
-        cityName: cityName,
-        countryName: countryName,
-        countryCode: countryCode,
-        locationText: locationText,
-        coordinates: coordinates?.toEntity(),
-      );
+    cityId: cityId,
+    cityName: cityName,
+    countryName: countryName,
+    countryCode: countryCode,
+    locationText: locationText,
+    coordinates: coordinates?.toEntity(),
+  );
 }
 
 extension StationGenreDtoX on StationGenreDto {
@@ -60,32 +60,32 @@ extension StationPopularityDtoX on StationPopularityDto {
 
 extension StreamDtoX on StreamDto {
   RadioStream toEntity() => RadioStream(
-        id: id,
-        url: url,
-        bitrate: bitrate,
-        contentType: contentType,
-        codec: codec,
-        protocol: protocol,
-        isHttps: isHttps,
-        works: works,
-      );
+    id: id,
+    url: url,
+    bitrate: bitrate,
+    contentType: contentType,
+    codec: codec,
+    protocol: protocol,
+    isHttps: isHttps,
+    works: works,
+  );
 }
 
 extension StationDtoX on StationDto {
   Station toEntity() => Station(
-        id: id,
-        name: name,
-        slug: slug,
-        isActive: isActive,
-        logo: logo,
-        dial: dial?.toEntity(),
-        aliases: aliases?.toEntity(),
-        location: location?.toEntity(),
-        genre: genre?.toEntity(),
-        popularity: popularity?.toEntity(),
-        streams: streams.map((s) => s.toEntity()).toList(),
-        languages: languages?.map((l) => l.toEntity()).toList(),
-      );
+    id: id,
+    name: name,
+    slug: slug,
+    isActive: isActive,
+    logo: logo,
+    dial: dial?.toEntity(),
+    aliases: aliases?.toEntity(),
+    location: location?.toEntity(),
+    genre: genre?.toEntity(),
+    popularity: popularity?.toEntity(),
+    streams: streams.map((s) => s.toEntity()).toList(),
+    languages: languages?.map((l) => l.toEntity()).toList(),
+  );
 }
 
 // Entity → DTO (used when persisting a Station snapshot, e.g. favorites)
@@ -97,13 +97,13 @@ extension CoordinatesX on Coordinates {
 
 extension StationLocationX on StationLocation {
   StationLocationDto toDto() => StationLocationDto(
-        cityId: cityId,
-        cityName: cityName,
-        countryName: countryName,
-        countryCode: countryCode,
-        locationText: locationText,
-        coordinates: coordinates?.toDto(),
-      );
+    cityId: cityId,
+    cityName: cityName,
+    countryName: countryName,
+    countryCode: countryCode,
+    locationText: locationText,
+    coordinates: coordinates?.toDto(),
+  );
 }
 
 extension StationGenreX on StationGenre {
@@ -131,30 +131,30 @@ extension StationPopularityX on StationPopularity {
 
 extension RadioStreamX on RadioStream {
   StreamDto toDto() => StreamDto(
-        id: id,
-        url: url,
-        bitrate: bitrate,
-        contentType: contentType,
-        codec: codec,
-        protocol: protocol,
-        isHttps: isHttps,
-        works: works,
-      );
+    id: id,
+    url: url,
+    bitrate: bitrate,
+    contentType: contentType,
+    codec: codec,
+    protocol: protocol,
+    isHttps: isHttps,
+    works: works,
+  );
 }
 
 extension StationX on Station {
   StationDto toDto() => StationDto(
-        id: id,
-        name: name,
-        slug: slug,
-        isActive: isActive,
-        logo: logo,
-        dial: dial?.toDto(),
-        aliases: aliases?.toDto(),
-        location: location?.toDto(),
-        genre: genre?.toDto(),
-        popularity: popularity?.toDto(),
-        streams: streams.map((s) => s.toDto()).toList(),
-        languages: languages?.map((l) => l.toDto()).toList(),
-      );
+    id: id,
+    name: name,
+    slug: slug,
+    isActive: isActive,
+    logo: logo,
+    dial: dial?.toDto(),
+    aliases: aliases?.toDto(),
+    location: location?.toDto(),
+    genre: genre?.toDto(),
+    popularity: popularity?.toDto(),
+    streams: streams.map((s) => s.toDto()).toList(),
+    languages: languages?.map((l) => l.toDto()).toList(),
+  );
 }

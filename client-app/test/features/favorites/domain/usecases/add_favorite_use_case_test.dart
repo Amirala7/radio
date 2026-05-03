@@ -31,9 +31,6 @@ void main() {
 
   test('propagates failures', () async {
     when(() => repo.add(any())).thenThrow(const UnauthenticatedFailure());
-    await expectLater(
-      useCase(station),
-      throwsA(isA<UnauthenticatedFailure>()),
-    );
+    await expectLater(useCase(station), throwsA(isA<UnauthenticatedFailure>()));
   });
 }

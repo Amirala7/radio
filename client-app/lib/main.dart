@@ -59,9 +59,7 @@ class RadioApp extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(
-          create: (_) => GenresViewModel(
-            listGenres: ListGenresUseCase(di()),
-          ),
+          create: (_) => GenresViewModel(listGenres: ListGenresUseCase(di())),
         ),
         ChangeNotifierProvider(
           create: (_) => FavoritesViewModel(

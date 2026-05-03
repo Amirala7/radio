@@ -23,30 +23,28 @@ class StationRepositoryImpl implements StationRepository {
     String? country,
     int page = 1,
     int limit = 20,
-  }) =>
-      _guarded(() async {
-        final dto = await _dataSource.popularStations(
-          country: country,
-          page: page,
-          limit: limit,
-        );
-        return dto.toEntity((s) => s.toEntity());
-      });
+  }) => _guarded(() async {
+    final dto = await _dataSource.popularStations(
+      country: country,
+      page: page,
+      limit: limit,
+    );
+    return dto.toEntity((s) => s.toEntity());
+  });
 
   @override
   Future<Page<Station>> searchStations({
     required String query,
     int page = 1,
     int limit = 20,
-  }) =>
-      _guarded(() async {
-        final dto = await _dataSource.searchStations(
-          query: query,
-          page: page,
-          limit: limit,
-        );
-        return dto.toEntity((s) => s.toEntity());
-      });
+  }) => _guarded(() async {
+    final dto = await _dataSource.searchStations(
+      query: query,
+      page: page,
+      limit: limit,
+    );
+    return dto.toEntity((s) => s.toEntity());
+  });
 
   @override
   Future<Page<Station>> stationsByGenre({
@@ -54,16 +52,15 @@ class StationRepositoryImpl implements StationRepository {
     String? genreSlug,
     int page = 1,
     int limit = 20,
-  }) =>
-      _guarded(() async {
-        final dto = await _dataSource.stationsByGenre(
-          genreId: genreId,
-          genreSlug: genreSlug,
-          page: page,
-          limit: limit,
-        );
-        return dto.toEntity((s) => s.toEntity());
-      });
+  }) => _guarded(() async {
+    final dto = await _dataSource.stationsByGenre(
+      genreId: genreId,
+      genreSlug: genreSlug,
+      page: page,
+      limit: limit,
+    );
+    return dto.toEntity((s) => s.toEntity());
+  });
 
   Future<T> _guarded<T>(Future<T> Function() action) async {
     try {

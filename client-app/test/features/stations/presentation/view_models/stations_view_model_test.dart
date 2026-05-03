@@ -14,12 +14,18 @@ import 'package:radio/features/stations/presentation/view_models/stations_state.
 import 'package:radio/features/stations/presentation/view_models/stations_view_model.dart';
 
 class _MockListStations extends Mock implements ListStationsUseCase {}
+
 class _MockPopular extends Mock implements GetPopularStationsUseCase {}
+
 class _MockSearch extends Mock implements SearchStationsUseCase {}
+
 class _MockByGenre extends Mock implements GetStationsByGenreUseCase {}
 
 Page<Station> _pageOf(List<Station> data, {int page = 1, int limit = 20}) =>
-    Page<Station>(data: data, meta: PageMeta(page: page, limit: limit));
+    Page<Station>(
+      data: data,
+      meta: PageMeta(page: page, limit: limit),
+    );
 
 void main() {
   late _MockListStations listStations;
@@ -56,8 +62,9 @@ void main() {
   });
 
   test('showList fetches page 1 in list mode and populates items', () async {
-    when(() => listStations(page: 1, limit: 20))
-        .thenAnswer((_) async => _pageOf([a, b]));
+    when(
+      () => listStations(page: 1, limit: 20),
+    ).thenAnswer((_) async => _pageOf([a, b]));
 
     await vm.showList();
 
@@ -70,8 +77,9 @@ void main() {
   });
 
   test('showPopular forwards country and switches mode', () async {
-    when(() => popular(country: 'GB', page: 1, limit: 20))
-        .thenAnswer((_) async => _pageOf([a]));
+    when(
+      () => popular(country: 'GB', page: 1, limit: 20),
+    ).thenAnswer((_) async => _pageOf([a]));
 
     await vm.showPopular(country: 'GB');
 
@@ -88,8 +96,9 @@ void main() {
   });
 
   test('showSearch sets query, switches mode, and fetches', () async {
-    when(() => search(query: 'jazz', page: 1, limit: 20))
-        .thenAnswer((_) async => _pageOf([b]));
+    when(
+      () => search(query: 'jazz', page: 1, limit: 20),
+    ).thenAnswer((_) async => _pageOf([b]));
 
     await vm.showSearch('jazz');
 
@@ -99,8 +108,9 @@ void main() {
   });
 
   test('showByGenre forwards id and slug', () async {
-    when(() => byGenre(genreId: 7, genreSlug: null, page: 1, limit: 20))
-        .thenAnswer((_) async => _pageOf([a]));
+    when(
+      () => byGenre(genreId: 7, genreSlug: null, page: 1, limit: 20),
+    ).thenAnswer((_) async => _pageOf([a]));
 
     await vm.showByGenre(genreId: 7);
 
@@ -110,12 +120,14 @@ void main() {
   });
 
   test('refresh re-fetches the current mode at page 1', () async {
-    when(() => popular(country: 'US', page: 1, limit: 20))
-        .thenAnswer((_) async => _pageOf([a]));
+    when(
+      () => popular(country: 'US', page: 1, limit: 20),
+    ).thenAnswer((_) async => _pageOf([a]));
     await vm.showPopular(country: 'US');
 
-    when(() => popular(country: 'US', page: 1, limit: 20))
-        .thenAnswer((_) async => _pageOf([a, b]));
+    when(
+      () => popular(country: 'US', page: 1, limit: 20),
+    ).thenAnswer((_) async => _pageOf([a, b]));
     await vm.refresh();
 
     expect(vm.state.items, [a, b]);
@@ -124,13 +136,17 @@ void main() {
   });
 
   test('loadMore appends the next page and advances page', () async {
-    when(() => listStations(page: 1, limit: 20))
-        .thenAnswer((_) async => _pageOf(List.generate(20, (i) => Station(id: i, name: '$i', streams: const []))));
+    when(() => listStations(page: 1, limit: 20)).thenAnswer(
+      (_) async => _pageOf(
+        List.generate(20, (i) => Station(id: i, name: '$i', streams: const [])),
+      ),
+    );
     await vm.showList();
     expect(vm.state.hasMore, true);
 
-    when(() => listStations(page: 2, limit: 20))
-        .thenAnswer((_) async => _pageOf([a, b], page: 2));
+    when(
+      () => listStations(page: 2, limit: 20),
+    ).thenAnswer((_) async => _pageOf([a, b], page: 2));
     await vm.loadMore();
 
     expect(vm.state.page, 2);
@@ -140,8 +156,9 @@ void main() {
   });
 
   test('loadMore is a no-op when hasMore is false', () async {
-    when(() => listStations(page: 1, limit: 20))
-        .thenAnswer((_) async => _pageOf([a]));
+    when(
+      () => listStations(page: 1, limit: 20),
+    ).thenAnswer((_) async => _pageOf([a]));
     await vm.showList();
     expect(vm.state.hasMore, false);
 
@@ -151,13 +168,17 @@ void main() {
   });
 
   test('loadMore is a no-op while isLoadingMore', () async {
-    when(() => listStations(page: 1, limit: 20))
-        .thenAnswer((_) async => _pageOf(List.generate(20, (i) => Station(id: i, name: '$i', streams: const []))));
+    when(() => listStations(page: 1, limit: 20)).thenAnswer(
+      (_) async => _pageOf(
+        List.generate(20, (i) => Station(id: i, name: '$i', streams: const [])),
+      ),
+    );
     await vm.showList();
 
     final completer = Completer<Page<Station>>();
-    when(() => listStations(page: 2, limit: 20))
-        .thenAnswer((_) => completer.future);
+    when(
+      () => listStations(page: 2, limit: 20),
+    ).thenAnswer((_) => completer.future);
 
     final first = vm.loadMore();
     final second = vm.loadMore();
@@ -167,34 +188,49 @@ void main() {
     verify(() => listStations(page: 2, limit: 20)).called(1);
   });
 
-  test('failure during showList populates error and clears isLoading', () async {
-    when(() => listStations(page: 1, limit: 20))
-        .thenThrow(const NetworkFailure());
+  test(
+    'failure during showList populates error and clears isLoading',
+    () async {
+      when(
+        () => listStations(page: 1, limit: 20),
+      ).thenThrow(const NetworkFailure());
 
-    await vm.showList();
+      await vm.showList();
 
-    expect(vm.state.error, isA<NetworkFailure>());
-    expect(vm.state.isLoading, false);
-  });
+      expect(vm.state.error, isA<NetworkFailure>());
+      expect(vm.state.isLoading, false);
+    },
+  );
 
-  test('failure during loadMore preserves items and clears isLoadingMore', () async {
-    when(() => listStations(page: 1, limit: 20))
-        .thenAnswer((_) async => _pageOf(List.generate(20, (i) => Station(id: i, name: '$i', streams: const []))));
-    await vm.showList();
+  test(
+    'failure during loadMore preserves items and clears isLoadingMore',
+    () async {
+      when(() => listStations(page: 1, limit: 20)).thenAnswer(
+        (_) async => _pageOf(
+          List.generate(
+            20,
+            (i) => Station(id: i, name: '$i', streams: const []),
+          ),
+        ),
+      );
+      await vm.showList();
 
-    when(() => listStations(page: 2, limit: 20))
-        .thenThrow(const NetworkFailure());
-    await vm.loadMore();
+      when(
+        () => listStations(page: 2, limit: 20),
+      ).thenThrow(const NetworkFailure());
+      await vm.loadMore();
 
-    expect(vm.state.error, isA<NetworkFailure>());
-    expect(vm.state.isLoadingMore, false);
-    expect(vm.state.items.length, 20); // preserved
-    expect(vm.state.page, 1);           // not advanced
-  });
+      expect(vm.state.error, isA<NetworkFailure>());
+      expect(vm.state.isLoadingMore, false);
+      expect(vm.state.items.length, 20); // preserved
+      expect(vm.state.page, 1); // not advanced
+    },
+  );
 
   test('clearError clears state.error without invoking any use case', () async {
-    when(() => listStations(page: 1, limit: 20))
-        .thenThrow(const NetworkFailure());
+    when(
+      () => listStations(page: 1, limit: 20),
+    ).thenThrow(const NetworkFailure());
     await vm.showList();
     expect(vm.state.error, isNotNull);
 

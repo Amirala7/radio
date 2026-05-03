@@ -56,9 +56,7 @@ class _VolumeKnobState extends State<VolumeKnob> {
         const SizedBox(height: AppSpacing.xs),
         Row(
           mainAxisSize: MainAxisSize.min,
-          children: const [
-            SizedBox(width: 96, child: _MinMax()),
-          ],
+          children: const [SizedBox(width: 96, child: _MinMax())],
         ),
       ],
     );

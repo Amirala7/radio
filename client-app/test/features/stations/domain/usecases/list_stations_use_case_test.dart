@@ -13,7 +13,10 @@ void main() {
   late _MockRepo repo;
   late ListStationsUseCase useCase;
   const sample = Station(id: 1, name: 'X', streams: []);
-  const page = Page<Station>(data: [sample], meta: PageMeta(page: 1, limit: 20));
+  const page = Page<Station>(
+    data: [sample],
+    meta: PageMeta(page: 1, limit: 20),
+  );
 
   setUp(() {
     repo = _MockRepo();
@@ -21,16 +24,18 @@ void main() {
   });
 
   test('forwards page and limit and returns the repo result', () async {
-    when(() => repo.listStations(page: 2, limit: 50))
-        .thenAnswer((_) async => page);
+    when(
+      () => repo.listStations(page: 2, limit: 50),
+    ).thenAnswer((_) async => page);
     final result = await useCase(page: 2, limit: 50);
     expect(result.data.first.id, 1);
     verify(() => repo.listStations(page: 2, limit: 50)).called(1);
   });
 
   test('propagates failures from the repo', () async {
-    when(() => repo.listStations(page: 1, limit: 20))
-        .thenThrow(const NetworkFailure());
+    when(
+      () => repo.listStations(page: 1, limit: 20),
+    ).thenThrow(const NetworkFailure());
     await expectLater(useCase(), throwsA(isA<NetworkFailure>()));
   });
 }

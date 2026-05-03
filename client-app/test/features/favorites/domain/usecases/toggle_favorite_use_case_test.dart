@@ -39,15 +39,18 @@ void main() {
     verifyNever(() => repo.remove(any()));
   });
 
-  test('propagates failure from isFavorite without calling add/remove',
-      () async {
-    when(() => repo.isFavorite(7))
-        .thenAnswer((_) => Stream.error(const UnauthenticatedFailure()));
-    await expectLater(
-      useCase(station),
-      throwsA(isA<UnauthenticatedFailure>()),
-    );
-    verifyNever(() => repo.add(any()));
-    verifyNever(() => repo.remove(any()));
-  });
+  test(
+    'propagates failure from isFavorite without calling add/remove',
+    () async {
+      when(
+        () => repo.isFavorite(7),
+      ).thenAnswer((_) => Stream.error(const UnauthenticatedFailure()));
+      await expectLater(
+        useCase(station),
+        throwsA(isA<UnauthenticatedFailure>()),
+      );
+      verifyNever(() => repo.add(any()));
+      verifyNever(() => repo.remove(any()));
+    },
+  );
 }

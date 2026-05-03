@@ -6,10 +6,8 @@ import '../../domain/entities/favorite_station.dart';
 import '../models/favorite_station_dto.dart';
 
 extension FavoriteStationDtoX on FavoriteStationDto {
-  FavoriteStation toEntity() => FavoriteStation(
-        station: station.toEntity(),
-        addedAt: addedAt.toDate(),
-      );
+  FavoriteStation toEntity() =>
+      FavoriteStation(station: station.toEntity(), addedAt: addedAt.toDate());
 }
 
 extension StationFavoriteX on Station {

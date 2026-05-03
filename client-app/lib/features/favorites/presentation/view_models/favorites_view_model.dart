@@ -17,17 +17,13 @@ class FavoritesViewModel extends ChangeNotifier {
     required AddFavoriteUseCase addFavorite,
     required RemoveFavoriteUseCase removeFavorite,
     required ToggleFavoriteUseCase toggleFavorite,
-  })  : _addFavorite = addFavorite,
-        _removeFavorite = removeFavorite,
-        _toggleFavorite = toggleFavorite {
+  }) : _addFavorite = addFavorite,
+       _removeFavorite = removeFavorite,
+       _toggleFavorite = toggleFavorite {
     _subscription = watchFavorites().listen(
       (items) {
         if (_disposed) return;
-        _state = _state.copyWith(
-          items: items,
-          isLoading: false,
-          error: null,
-        );
+        _state = _state.copyWith(items: items, isLoading: false, error: null);
         notifyListeners();
       },
       onError: (Object e) {

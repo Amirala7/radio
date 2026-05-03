@@ -19,18 +19,22 @@ void main() {
   });
 
   test('forwards genreId variant', () async {
-    when(() => repo.stationsByGenre(genreId: 7, page: 1, limit: 20))
-        .thenAnswer((_) async => page);
+    when(
+      () => repo.stationsByGenre(genreId: 7, page: 1, limit: 20),
+    ).thenAnswer((_) async => page);
     await useCase(genreId: 7);
-    verify(() => repo.stationsByGenre(genreId: 7, page: 1, limit: 20))
-        .called(1);
+    verify(
+      () => repo.stationsByGenre(genreId: 7, page: 1, limit: 20),
+    ).called(1);
   });
 
   test('forwards genreSlug variant', () async {
-    when(() => repo.stationsByGenre(genreSlug: 'rock', page: 1, limit: 20))
-        .thenAnswer((_) async => page);
+    when(
+      () => repo.stationsByGenre(genreSlug: 'rock', page: 1, limit: 20),
+    ).thenAnswer((_) async => page);
     await useCase(genreSlug: 'rock');
-    verify(() => repo.stationsByGenre(genreSlug: 'rock', page: 1, limit: 20))
-        .called(1);
+    verify(
+      () => repo.stationsByGenre(genreSlug: 'rock', page: 1, limit: 20),
+    ).called(1);
   });
 }

@@ -25,8 +25,12 @@ void main() {
   });
 
   test('skips works == false candidates', () {
-    const broken =
-        RadioStream(url: 'https://b', bitrate: 320, isHttps: true, works: false);
+    const broken = RadioStream(
+      url: 'https://b',
+      bitrate: 320,
+      isHttps: true,
+      works: false,
+    );
     const ok = RadioStream(url: 'https://ok', bitrate: 64, isHttps: true);
     expect(pickBestStream(const [broken, ok]), ok);
   });
@@ -39,7 +43,11 @@ void main() {
 
   test('treats missing bitrate as 0 when ranking', () {
     const noBitrate = RadioStream(url: 'https://x', isHttps: true);
-    const withBitrate = RadioStream(url: 'https://y', bitrate: 1, isHttps: true);
+    const withBitrate = RadioStream(
+      url: 'https://y',
+      bitrate: 1,
+      isHttps: true,
+    );
     expect(pickBestStream(const [noBitrate, withBitrate]), withBitrate);
   });
 }

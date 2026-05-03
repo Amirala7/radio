@@ -17,10 +17,10 @@ class PlayerViewModel extends ChangeNotifier {
     required PauseUseCase pause,
     required ResumeUseCase resume,
     required StopUseCase stop,
-  })  : _playStation = playStation,
-        _pause = pause,
-        _resume = resume,
-        _stop = stop {
+  }) : _playStation = playStation,
+       _pause = pause,
+       _resume = resume,
+       _stop = stop {
     _subscription = watchPlayback().listen((s) {
       if (_disposed) return;
       _state = s;

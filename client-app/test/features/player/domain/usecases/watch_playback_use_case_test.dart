@@ -16,9 +16,9 @@ void main() {
   });
 
   test('forwards the repo state stream', () async {
-    when(() => repo.state).thenAnswer(
-      (_) => Stream<PlaybackState>.value(const PlaybackState()),
-    );
+    when(
+      () => repo.state,
+    ).thenAnswer((_) => Stream<PlaybackState>.value(const PlaybackState()));
     final v = await useCase().first;
     expect(v.status, PlaybackStatus.idle);
   });

@@ -16,6 +16,5 @@ abstract class PageDto<T> with _$PageDto<T> {
   factory PageDto.fromJson(
     Map<String, dynamic> json,
     T Function(Object?) fromJsonT,
-  ) =>
-      _$PageDtoFromJson(json, fromJsonT);
+  ) => _$PageDtoFromJson(json, fromJsonT);
 }

@@ -9,53 +9,44 @@ class StationRemoteDataSource {
 
   final CloudFunctionsClient _client;
 
-  Future<PageDto<StationDto>> listStations({
-    int page = 1,
-    int limit = 20,
-  }) =>
+  Future<PageDto<StationDto>> listStations({int page = 1, int limit = 20}) =>
       _callPage('listStations', {'page': page, 'limit': limit});
 
   Future<PageDto<StationDto>> popularStations({
     String? country,
     int page = 1,
     int limit = 20,
-  }) =>
-      _callPage('popularStations', {
-        'country': ?country,
-        'page': page,
-        'limit': limit,
-      });
+  }) => _callPage('popularStations', {
+    'country': ?country,
+    'page': page,
+    'limit': limit,
+  });
 
   Future<PageDto<StationDto>> searchStations({
     required String query,
     int page = 1,
     int limit = 20,
-  }) =>
-      _callPage('searchStations', {
-        'q': query,
-        'page': page,
-        'limit': limit,
-      });
+  }) => _callPage('searchStations', {'q': query, 'page': page, 'limit': limit});
 
   Future<PageDto<StationDto>> stationsByGenre({
     int? genreId,
     String? genreSlug,
     int page = 1,
     int limit = 20,
-  }) =>
-      _callPage('stationsByGenre', {
-        'genreId': ?genreId,
-        'genreSlug': ?genreSlug,
-        'page': page,
-        'limit': limit,
-      });
+  }) => _callPage('stationsByGenre', {
+    'genreId': ?genreId,
+    'genreSlug': ?genreSlug,
+    'page': page,
+    'limit': limit,
+  });
 
   Future<PageDto<StationDto>> _callPage(
     String name,
     Map<String, Object?> args,
   ) async {
-    final HttpsCallableResult<Object?> result =
-        await _client.call(name).call<Object?>(args);
+    final HttpsCallableResult<Object?> result = await _client
+        .call(name)
+        .call<Object?>(args);
     final json = _asJsonMap(result.data);
     return PageDto<StationDto>.fromJson(
       json,

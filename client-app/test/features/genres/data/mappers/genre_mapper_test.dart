@@ -4,8 +4,7 @@ import 'package:radio/features/genres/data/models/genre_dto.dart';
 
 void main() {
   test('maps id, slug, name, radioCount', () {
-    const dto =
-        GenreDto(id: 1, slug: 'rock', name: 'Rock', radioCount: 1234);
+    const dto = GenreDto(id: 1, slug: 'rock', name: 'Rock', radioCount: 1234);
     final genre = dto.toEntity();
     expect(genre.id, 1);
     expect(genre.slug, 'rock');

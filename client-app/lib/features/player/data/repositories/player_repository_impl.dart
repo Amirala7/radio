@@ -31,22 +31,26 @@ class PlayerRepositoryImpl implements PlayerRepository {
     if (picked == null) {
       _currentStation = station;
       _currentStream = null;
-      _emit(_current.copyWith(
-        status: PlaybackStatus.error,
-        currentStation: station,
-        currentStream: null,
-        error: const UnknownFailure('no playable streams'),
-      ));
+      _emit(
+        _current.copyWith(
+          status: PlaybackStatus.error,
+          currentStation: station,
+          currentStream: null,
+          error: const UnknownFailure('no playable streams'),
+        ),
+      );
       return;
     }
     _currentStation = station;
     _currentStream = picked;
-    _emit(_current.copyWith(
-      status: PlaybackStatus.loading,
-      currentStation: station,
-      currentStream: picked,
-      error: null,
-    ));
+    _emit(
+      _current.copyWith(
+        status: PlaybackStatus.loading,
+        currentStation: station,
+        currentStream: picked,
+        error: null,
+      ),
+    );
     await _dataSource.setUrlAndPlay(picked.url);
   }
 
@@ -70,29 +74,32 @@ class PlayerRepositoryImpl implements PlayerRepository {
 
   void _onSnapshot(RawPlayerSnapshot snap) {
     if (snap.errorMessage != null) {
-      _emit(_current.copyWith(
-        status: PlaybackStatus.error,
+      _emit(
+        _current.copyWith(
+          status: PlaybackStatus.error,
+          currentStation: _currentStation,
+          currentStream: _currentStream,
+          position: snap.position,
+          bufferedPosition: snap.bufferedPosition,
+          isBuffering: false,
+          error: UnknownFailure(snap.errorMessage!),
+        ),
+      );
+      return;
+    }
+    final isBuffering = snap.processingState == RawProcessingState.buffering;
+    final status = _statusFor(snap);
+    _emit(
+      _current.copyWith(
+        status: status,
         currentStation: _currentStation,
         currentStream: _currentStream,
         position: snap.position,
         bufferedPosition: snap.bufferedPosition,
-        isBuffering: false,
-        error: UnknownFailure(snap.errorMessage!),
-      ));
-      return;
-    }
-    final isBuffering =
-        snap.processingState == RawProcessingState.buffering;
-    final status = _statusFor(snap);
-    _emit(_current.copyWith(
-      status: status,
-      currentStation: _currentStation,
-      currentStream: _currentStream,
-      position: snap.position,
-      bufferedPosition: snap.bufferedPosition,
-      isBuffering: isBuffering,
-      error: null,
-    ));
+        isBuffering: isBuffering,
+        error: null,
+      ),
+    );
   }
 
   PlaybackStatus _statusFor(RawPlayerSnapshot snap) {

@@ -47,7 +47,10 @@ void main() {
         isActive: true,
         logo: 'https://logo',
         dial: StationDialDto(band: 'FM', dial: '98.8', dialStripped: '988'),
-        aliases: StationAliasesDto(cleanName: 'BBC Radio One', alsoKnownAs: 'R1'),
+        aliases: StationAliasesDto(
+          cleanName: 'BBC Radio One',
+          alsoKnownAs: 'R1',
+        ),
         location: StationLocationDto(
           cityId: 1,
           cityName: 'London',
@@ -57,17 +60,12 @@ void main() {
           coordinates: CoordinatesDto(latitude: 51.5, longitude: -0.12),
         ),
         genre: StationGenreDto(text: 'Pop', tags: ['pop', 'top40']),
-        popularity: StationPopularityDto(
-          global: 999,
-          byCountry: {'GB': 999},
-        ),
+        popularity: StationPopularityDto(global: 999, byCountry: {'GB': 999}),
         streams: [
           StreamDto(url: 'https://a', bitrate: 128, isHttps: true),
           StreamDto(url: 'http://b', bitrate: 64),
         ],
-        languages: [
-          StationLanguageDto(code: 'en', name: 'English'),
-        ],
+        languages: [StationLanguageDto(code: 'en', name: 'English')],
       );
 
       final station = dto.toEntity();
@@ -105,7 +103,10 @@ void main() {
         'streams': [
           {'url': 'https://a', 'bitrate': 128, 'isHttps': true},
         ],
-        'genre': {'text': 'Pop', 'tags': ['pop']},
+        'genre': {
+          'text': 'Pop',
+          'tags': ['pop'],
+        },
         'location': {'countryCode': 'GB'},
       };
       final dto = StationDto.fromJson(json);

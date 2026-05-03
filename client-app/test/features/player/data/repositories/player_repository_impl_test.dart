@@ -77,12 +77,14 @@ void main() {
       final sub = repo.state.listen(emitted.add);
 
       await repo.play(station);
-      events.add(const RawPlayerSnapshot(
-        processingState: RawProcessingState.ready,
-        playing: true,
-        position: Duration(seconds: 3),
-        bufferedPosition: Duration(seconds: 5),
-      ));
+      events.add(
+        const RawPlayerSnapshot(
+          processingState: RawProcessingState.ready,
+          playing: true,
+          position: Duration(seconds: 3),
+          bufferedPosition: Duration(seconds: 5),
+        ),
+      );
       await Future<void>.delayed(Duration.zero);
 
       expect(emitted.last.status, PlaybackStatus.playing);
@@ -98,12 +100,14 @@ void main() {
       final sub = repo.state.listen(emitted.add);
 
       await repo.play(station);
-      events.add(const RawPlayerSnapshot(
-        processingState: RawProcessingState.ready,
-        playing: false,
-        position: Duration.zero,
-        bufferedPosition: Duration.zero,
-      ));
+      events.add(
+        const RawPlayerSnapshot(
+          processingState: RawProcessingState.ready,
+          playing: false,
+          position: Duration.zero,
+          bufferedPosition: Duration.zero,
+        ),
+      );
       await Future<void>.delayed(Duration.zero);
 
       expect(emitted.last.status, PlaybackStatus.paused);
@@ -115,12 +119,14 @@ void main() {
       final sub = repo.state.listen(emitted.add);
 
       await repo.play(station);
-      events.add(const RawPlayerSnapshot(
-        processingState: RawProcessingState.buffering,
-        playing: true,
-        position: Duration.zero,
-        bufferedPosition: Duration.zero,
-      ));
+      events.add(
+        const RawPlayerSnapshot(
+          processingState: RawProcessingState.buffering,
+          playing: true,
+          position: Duration.zero,
+          bufferedPosition: Duration.zero,
+        ),
+      );
       await Future<void>.delayed(Duration.zero);
 
       expect(emitted.last.isBuffering, isTrue);
@@ -132,19 +138,23 @@ void main() {
       final sub = repo.state.listen(emitted.add);
 
       await repo.play(station);
-      events.add(const RawPlayerSnapshot(
-        processingState: RawProcessingState.idle,
-        playing: false,
-        position: Duration.zero,
-        bufferedPosition: Duration.zero,
-        errorMessage: 'codec failure',
-      ));
+      events.add(
+        const RawPlayerSnapshot(
+          processingState: RawProcessingState.idle,
+          playing: false,
+          position: Duration.zero,
+          bufferedPosition: Duration.zero,
+          errorMessage: 'codec failure',
+        ),
+      );
       await Future<void>.delayed(Duration.zero);
 
       expect(emitted.last.status, PlaybackStatus.error);
       expect(emitted.last.error, isA<UnknownFailure>());
-      expect((emitted.last.error! as UnknownFailure).message,
-          contains('codec failure'));
+      expect(
+        (emitted.last.error! as UnknownFailure).message,
+        contains('codec failure'),
+      );
       await sub.cancel();
     });
   });

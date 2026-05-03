@@ -11,8 +11,8 @@ class FavoritesRepositoryImpl implements FavoritesRepository {
   FavoritesRepositoryImpl({
     required FavoritesRemoteDataSource dataSource,
     required AuthService authService,
-  })  : _dataSource = dataSource,
-        _authService = authService;
+  }) : _dataSource = dataSource,
+       _authService = authService;
 
   final FavoritesRemoteDataSource _dataSource;
   final AuthService _authService;
@@ -23,7 +23,9 @@ class FavoritesRepositoryImpl implements FavoritesRepository {
   Stream<List<FavoriteStation>> watchAll() {
     final uid = _uid();
     if (uid == null) {
-      return Stream<List<FavoriteStation>>.error(const UnauthenticatedFailure());
+      return Stream<List<FavoriteStation>>.error(
+        const UnauthenticatedFailure(),
+      );
     }
     return _dataSource
         .watchAll(uid)

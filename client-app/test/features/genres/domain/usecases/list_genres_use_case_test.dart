@@ -24,15 +24,17 @@ void main() {
   });
 
   test('forwards page and limit, returns repo result', () async {
-    when(() => repo.listGenres(page: 2, limit: 50))
-        .thenAnswer((_) async => page);
+    when(
+      () => repo.listGenres(page: 2, limit: 50),
+    ).thenAnswer((_) async => page);
     final result = await useCase(page: 2, limit: 50);
     expect(result.data.first.id, 1);
   });
 
   test('propagates failures', () async {
-    when(() => repo.listGenres(page: 1, limit: 100))
-        .thenThrow(const NetworkFailure());
+    when(
+      () => repo.listGenres(page: 1, limit: 100),
+    ).thenThrow(const NetworkFailure());
     await expectLater(useCase(), throwsA(isA<NetworkFailure>()));
   });
 }

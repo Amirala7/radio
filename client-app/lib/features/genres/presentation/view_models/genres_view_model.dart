@@ -6,7 +6,7 @@ import 'genres_state.dart';
 
 class GenresViewModel extends ChangeNotifier {
   GenresViewModel({required ListGenresUseCase listGenres})
-      : _listGenres = listGenres;
+    : _listGenres = listGenres;
 
   final ListGenresUseCase _listGenres;
 
@@ -30,8 +30,7 @@ class GenresViewModel extends ChangeNotifier {
     notifyListeners();
     final nextPage = _state.page + 1;
     try {
-      final pageResult =
-          await _listGenres(page: nextPage, limit: _state.limit);
+      final pageResult = await _listGenres(page: nextPage, limit: _state.limit);
       _state = _state.copyWith(
         items: [..._state.items, ...pageResult.data],
         page: nextPage,

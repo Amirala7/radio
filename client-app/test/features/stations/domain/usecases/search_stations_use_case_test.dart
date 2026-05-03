@@ -19,10 +19,12 @@ void main() {
   });
 
   test('forwards query and pagination', () async {
-    when(() => repo.searchStations(query: 'jazz', page: 1, limit: 20))
-        .thenAnswer((_) async => page);
+    when(
+      () => repo.searchStations(query: 'jazz', page: 1, limit: 20),
+    ).thenAnswer((_) async => page);
     await useCase(query: 'jazz');
-    verify(() => repo.searchStations(query: 'jazz', page: 1, limit: 20))
-        .called(1);
+    verify(
+      () => repo.searchStations(query: 'jazz', page: 1, limit: 20),
+    ).called(1);
   });
 }

@@ -24,7 +24,7 @@ class RawPlayerSnapshot {
 /// as [RawPlayerSnapshot] entries with `errorMessage` set, rather than throwing.
 class AudioPlayerDataSource {
   AudioPlayerDataSource({AudioPlayer? player})
-      : _player = player ?? AudioPlayer() {
+    : _player = player ?? AudioPlayer() {
     _attach();
   }
 
@@ -85,13 +85,15 @@ class AudioPlayerDataSource {
   }
 
   void _emit() {
-    _events.add(RawPlayerSnapshot(
-      processingState: _mapProcessingState(_state.processingState),
-      playing: _state.playing,
-      position: _position,
-      bufferedPosition: _buffered,
-      errorMessage: _lastError,
-    ));
+    _events.add(
+      RawPlayerSnapshot(
+        processingState: _mapProcessingState(_state.processingState),
+        playing: _state.playing,
+        position: _position,
+        bufferedPosition: _buffered,
+        errorMessage: _lastError,
+      ),
+    );
   }
 
   RawProcessingState _mapProcessingState(ProcessingState s) {

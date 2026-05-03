@@ -27,8 +27,9 @@ void main() {
 
   group('listStations', () {
     test('returns mapped Page<Station> on success', () async {
-      when(() => ds.listStations(page: 1, limit: 20))
-          .thenAnswer((_) async => samplePage);
+      when(
+        () => ds.listStations(page: 1, limit: 20),
+      ).thenAnswer((_) async => samplePage);
 
       final page = await repo.listStations();
 
@@ -58,62 +59,63 @@ void main() {
     });
 
     test('maps unavailable to NetworkFailure', () async {
-      when(() => ds.listStations(page: 1, limit: 20)).thenThrow(
-        FirebaseFunctionsException(message: '', code: 'unavailable'),
-      );
-      await expectLater(
-        repo.listStations(),
-        throwsA(isA<NetworkFailure>()),
-      );
+      when(
+        () => ds.listStations(page: 1, limit: 20),
+      ).thenThrow(FirebaseFunctionsException(message: '', code: 'unavailable'));
+      await expectLater(repo.listStations(), throwsA(isA<NetworkFailure>()));
     });
 
     test('maps arbitrary exceptions to UnknownFailure', () async {
-      when(() => ds.listStations(page: 1, limit: 20))
-          .thenThrow(StateError('boom'));
-      await expectLater(
-        repo.listStations(),
-        throwsA(isA<UnknownFailure>()),
-      );
+      when(
+        () => ds.listStations(page: 1, limit: 20),
+      ).thenThrow(StateError('boom'));
+      await expectLater(repo.listStations(), throwsA(isA<UnknownFailure>()));
     });
   });
 
   group('popularStations', () {
     test('forwards country and pagination, returns mapped page', () async {
-      when(() => ds.popularStations(country: 'GB', page: 2, limit: 10))
-          .thenAnswer((_) async => samplePage);
-      final page = await repo.popularStations(country: 'GB', page: 2, limit: 10);
+      when(
+        () => ds.popularStations(country: 'GB', page: 2, limit: 10),
+      ).thenAnswer((_) async => samplePage);
+      final page = await repo.popularStations(
+        country: 'GB',
+        page: 2,
+        limit: 10,
+      );
       expect(page.data.first.id, 1);
-      verify(() => ds.popularStations(country: 'GB', page: 2, limit: 10))
-          .called(1);
+      verify(
+        () => ds.popularStations(country: 'GB', page: 2, limit: 10),
+      ).called(1);
     });
   });
 
   group('searchStations', () {
     test('forwards query and returns mapped page', () async {
-      when(() => ds.searchStations(query: 'jazz', page: 1, limit: 20))
-          .thenAnswer((_) async => samplePage);
+      when(
+        () => ds.searchStations(query: 'jazz', page: 1, limit: 20),
+      ).thenAnswer((_) async => samplePage);
       final page = await repo.searchStations(query: 'jazz');
       expect(page.data, isNotEmpty);
-      verify(() => ds.searchStations(query: 'jazz', page: 1, limit: 20))
-          .called(1);
+      verify(
+        () => ds.searchStations(query: 'jazz', page: 1, limit: 20),
+      ).called(1);
     });
   });
 
   group('stationsByGenre', () {
     test('forwards genreId and returns mapped page', () async {
-      when(() =>
-              ds.stationsByGenre(genreId: 5, page: 1, limit: 20))
-          .thenAnswer((_) async => samplePage);
+      when(
+        () => ds.stationsByGenre(genreId: 5, page: 1, limit: 20),
+      ).thenAnswer((_) async => samplePage);
       final page = await repo.stationsByGenre(genreId: 5);
       expect(page.data, isNotEmpty);
     });
 
     test('forwards genreSlug and returns mapped page', () async {
-      when(() => ds.stationsByGenre(
-            genreSlug: 'rock',
-            page: 1,
-            limit: 20,
-          )).thenAnswer((_) async => samplePage);
+      when(
+        () => ds.stationsByGenre(genreSlug: 'rock', page: 1, limit: 20),
+      ).thenAnswer((_) async => samplePage);
       final page = await repo.stationsByGenre(genreSlug: 'rock');
       expect(page.data, isNotEmpty);
     });
