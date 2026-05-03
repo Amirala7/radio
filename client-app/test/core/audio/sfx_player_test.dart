@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mocktail/mocktail.dart';
@@ -22,6 +20,7 @@ void main() {
       when(() => p.setLoopMode(any())).thenAnswer((_) async {});
       when(() => p.seek(any())).thenAnswer((_) async {});
       when(() => p.play()).thenAnswer((_) async {});
+      when(() => p.pause()).thenAnswer((_) async {});
       when(() => p.stop()).thenAnswer((_) async {});
       when(() => p.dispose()).thenAnswer((_) async {});
     }
@@ -46,46 +45,64 @@ void main() {
     ]);
   });
 
-  test('startLoop enables LoopMode.one and plays', () async {
-    await sfx.init();
-    await sfx.startLoop(SfxId.tuning1);
-    verify(() => players[SfxId.tuning1]!.setLoopMode(LoopMode.one)).called(1);
-    verify(() => players[SfxId.tuning1]!.play()).called(1);
-  });
-
-  test('stopLoop stops the active loop player only', () async {
-    await sfx.init();
-    await sfx.startLoop(SfxId.tuning1);
-    await sfx.stopLoop();
-    verify(() => players[SfxId.tuning1]!.stop()).called(1);
-    verifyNever(() => players[SfxId.click]!.stop());
-  });
+  test(
+    'startLoop enables LoopMode.one, seeks to zero, and plays',
+    () async {
+      await sfx.init();
+      await sfx.startLoop(SfxId.tuning1);
+      verifyInOrder([
+        () => players[SfxId.tuning1]!.setLoopMode(LoopMode.one),
+        () => players[SfxId.tuning1]!.seek(Duration.zero),
+        () => players[SfxId.tuning1]!.play(),
+      ]);
+    },
+  );
 
   test(
-    'stopLoop fired before startLoop completes still stops the player',
+    'stopLoop pauses and rewinds every tuning player',
+    () async {
+      await sfx.init();
+      await sfx.startLoop(SfxId.tuning1);
+      await sfx.stopLoop();
+      verify(() => players[SfxId.tuning1]!.pause()).called(greaterThan(0));
+      verify(
+        () => players[SfxId.tuning1]!.seek(Duration.zero),
+      ).called(greaterThan(0));
+      verifyNever(() => players[SfxId.click]!.pause());
+      verifyNever(() => players[SfxId.switchKnob]!.pause());
+    },
+  );
+
+  test(
+    'stopLoop fired before startLoop runs preempts the start (no play)',
     () async {
       await sfx.init();
 
-      // Hold the in-flight startLoop's play() until we say so.
-      final playGate = Completer<void>();
-      when(
-        () => players[SfxId.tuning1]!.play(),
-      ).thenAnswer((_) => playGate.future);
-
-      // Fire startLoop without awaiting (mirrors LCD's unawaited(...)).
+      // Fire start without awaiting — the synchronous flag is set, but
+      // the chained _reconcile hasn't run yet.
       // ignore: unawaited_futures
       sfx.startLoop(SfxId.tuning1);
 
-      // Stop while the start is still pending — this is the race that
-      // previously left the tuning loop running forever.
-      final stopFuture = sfx.stopLoop();
+      // Stop before _reconcile runs. Synchronously flips the intent.
+      await sfx.stopLoop();
 
-      // Let the in-flight play() finally resolve.
-      playGate.complete();
-      await stopFuture;
+      // play() must not have been invoked — by the time _reconcile ran,
+      // the intent was already 'stop'.
+      verifyNever(() => players[SfxId.tuning1]!.play());
+      // And both tuning players were paused defensively.
+      verify(() => players[SfxId.tuning1]!.pause()).called(greaterThan(0));
+    },
+  );
 
+  test(
+    'stop after start and reconcile actually stops the running loop',
+    () async {
+      await sfx.init();
+      await sfx.startLoop(SfxId.tuning1); // fully reconciled — playing.
       verify(() => players[SfxId.tuning1]!.play()).called(1);
-      verify(() => players[SfxId.tuning1]!.stop()).called(1);
+
+      await sfx.stopLoop();
+      verify(() => players[SfxId.tuning1]!.pause()).called(greaterThan(0));
     },
   );
 
