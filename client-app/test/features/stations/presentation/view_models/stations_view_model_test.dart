@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:radio/core/errors/failures.dart';
 import 'package:radio/core/pagination/page.dart';
 import 'package:radio/core/pagination/page_meta.dart';
 import 'package:radio/features/stations/domain/entities/station.dart';
@@ -164,5 +165,42 @@ void main() {
     await Future.wait([first, second]);
 
     verify(() => listStations(page: 2, limit: 20)).called(1);
+  });
+
+  test('failure during showList populates error and clears isLoading', () async {
+    when(() => listStations(page: 1, limit: 20))
+        .thenThrow(const NetworkFailure());
+
+    await vm.showList();
+
+    expect(vm.state.error, isA<NetworkFailure>());
+    expect(vm.state.isLoading, false);
+  });
+
+  test('failure during loadMore preserves items and clears isLoadingMore', () async {
+    when(() => listStations(page: 1, limit: 20))
+        .thenAnswer((_) async => _pageOf(List.generate(20, (i) => Station(id: i, name: '$i', streams: const []))));
+    await vm.showList();
+
+    when(() => listStations(page: 2, limit: 20))
+        .thenThrow(const NetworkFailure());
+    await vm.loadMore();
+
+    expect(vm.state.error, isA<NetworkFailure>());
+    expect(vm.state.isLoadingMore, false);
+    expect(vm.state.items.length, 20); // preserved
+    expect(vm.state.page, 1);           // not advanced
+  });
+
+  test('clearError clears state.error without invoking any use case', () async {
+    when(() => listStations(page: 1, limit: 20))
+        .thenThrow(const NetworkFailure());
+    await vm.showList();
+    expect(vm.state.error, isNotNull);
+
+    vm.clearError();
+
+    expect(vm.state.error, isNull);
+    verify(() => listStations(page: 1, limit: 20)).called(1); // not 2
   });
 }

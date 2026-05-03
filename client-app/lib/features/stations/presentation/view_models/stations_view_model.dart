@@ -112,6 +112,12 @@ class StationsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearError() {
+    if (_state.error == null) return;
+    _state = _state.copyWith(error: null);
+    notifyListeners();
+  }
+
   Future<Page<Station>> _fetchByMode(int page) {
     switch (_state.mode) {
       case StationsMode.list:
