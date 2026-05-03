@@ -30,6 +30,47 @@ void main() {
       expect(round['addedAt'], isA<Timestamp>());
       expect((round['addedAt']! as Timestamp).toDate().toUtc(), addedAt);
     });
+
+    test('fromMap recursively re-types Firestore-shaped nested values', () {
+      // Firestore returns Map<Object?, Object?> and List<Object?> for nested
+      // values, not Map<String, dynamic> / List<dynamic>. The generated
+      // _$StationDtoFromJson casts each element to Map<String, dynamic>, so
+      // without recursive re-typing this throws TypeError on the streams[0]
+      // cast. Regression test for the production read path.
+      final addedAt = DateTime.utc(2026, 5, 3);
+      final firestoreShape = <String, dynamic>{
+        'id': 1,
+        'name': 'X',
+        'streams': <Object?>[
+          <Object?, Object?>{
+            'url': 'https://a',
+            'bitrate': 128,
+            'isHttps': true,
+          },
+        ],
+        'genre': <Object?, Object?>{
+          'text': 'Pop',
+          'tags': <Object?>['pop', 'top40'],
+        },
+        'location': <Object?, Object?>{
+          'countryCode': 'GB',
+          'coordinates': <Object?, Object?>{
+            'latitude': 51.5,
+            'longitude': -0.12,
+          },
+        },
+        'addedAt': Timestamp.fromDate(addedAt),
+      };
+
+      final dto = FavoriteStationDto.fromMap(firestoreShape);
+
+      expect(dto.station.id, 1);
+      expect(dto.station.streams.first.url, 'https://a');
+      expect(dto.station.streams.first.bitrate, 128);
+      expect(dto.station.genre?.text, 'Pop');
+      expect(dto.station.genre?.tags, ['pop', 'top40']);
+      expect(dto.station.location?.coordinates?.latitude, 51.5);
+    });
   });
 
   group('FavoriteStationDtoX.toEntity', () {

@@ -38,16 +38,19 @@ void main() {
   });
 
   group('uid guard', () {
-    test('watchAll throws UnauthenticatedFailure when no user', () {
+    test('watchAll emits UnauthenticatedFailure when no user', () {
       when(() => auth.currentUser).thenReturn(null);
-      expect(() => repo.watchAll(), throwsA(isA<UnauthenticatedFailure>()));
+      expectLater(
+        repo.watchAll(),
+        emitsError(isA<UnauthenticatedFailure>()),
+      );
     });
 
-    test('isFavorite throws when no user', () {
+    test('isFavorite emits UnauthenticatedFailure when no user', () {
       when(() => auth.currentUser).thenReturn(null);
-      expect(
-        () => repo.isFavorite(1),
-        throwsA(isA<UnauthenticatedFailure>()),
+      expectLater(
+        repo.isFavorite(1),
+        emitsError(isA<UnauthenticatedFailure>()),
       );
     });
 

@@ -17,15 +17,14 @@ class FavoritesRepositoryImpl implements FavoritesRepository {
   final FavoritesRemoteDataSource _dataSource;
   final AuthService _authService;
 
-  String _uidOrThrow() {
-    final uid = _authService.currentUser?.uid;
-    if (uid == null) throw const UnauthenticatedFailure();
-    return uid;
-  }
+  String? _uid() => _authService.currentUser?.uid;
 
   @override
   Stream<List<FavoriteStation>> watchAll() {
-    final uid = _uidOrThrow();
+    final uid = _uid();
+    if (uid == null) {
+      return Stream<List<FavoriteStation>>.error(const UnauthenticatedFailure());
+    }
     return _dataSource
         .watchAll(uid)
         .map((dtos) => dtos.map((d) => d.toEntity()).toList())
@@ -34,7 +33,10 @@ class FavoritesRepositoryImpl implements FavoritesRepository {
 
   @override
   Stream<bool> isFavorite(int stationId) {
-    final uid = _uidOrThrow();
+    final uid = _uid();
+    if (uid == null) {
+      return Stream<bool>.error(const UnauthenticatedFailure());
+    }
     return _dataSource
         .watchIsFavorite(uid, stationId)
         .handleError((Object e) => throw mapException(e));
@@ -42,7 +44,8 @@ class FavoritesRepositoryImpl implements FavoritesRepository {
 
   @override
   Future<void> add(Station station) async {
-    final uid = _uidOrThrow();
+    final uid = _uid();
+    if (uid == null) throw const UnauthenticatedFailure();
     final dto = station.toFavoriteDto(addedAt: DateTime.now());
     try {
       await _dataSource.add(uid, dto);
@@ -53,7 +56,8 @@ class FavoritesRepositoryImpl implements FavoritesRepository {
 
   @override
   Future<void> remove(int stationId) async {
-    final uid = _uidOrThrow();
+    final uid = _uid();
+    if (uid == null) throw const UnauthenticatedFailure();
     try {
       await _dataSource.remove(uid, stationId);
     } catch (e) {

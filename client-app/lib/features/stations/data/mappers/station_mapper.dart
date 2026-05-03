@@ -17,6 +17,8 @@ import '../models/station_location_dto.dart';
 import '../models/station_popularity_dto.dart';
 import '../models/stream_dto.dart';
 
+// DTO → entity
+
 extension CoordinatesDtoX on CoordinatesDto {
   Coordinates toEntity() =>
       Coordinates(latitude: latitude, longitude: longitude);
@@ -83,5 +85,76 @@ extension StationDtoX on StationDto {
         popularity: popularity?.toEntity(),
         streams: streams.map((s) => s.toEntity()).toList(),
         languages: languages?.map((l) => l.toEntity()).toList(),
+      );
+}
+
+// Entity → DTO (used when persisting a Station snapshot, e.g. favorites)
+
+extension CoordinatesX on Coordinates {
+  CoordinatesDto toDto() =>
+      CoordinatesDto(latitude: latitude, longitude: longitude);
+}
+
+extension StationLocationX on StationLocation {
+  StationLocationDto toDto() => StationLocationDto(
+        cityId: cityId,
+        cityName: cityName,
+        countryName: countryName,
+        countryCode: countryCode,
+        locationText: locationText,
+        coordinates: coordinates?.toDto(),
+      );
+}
+
+extension StationGenreX on StationGenre {
+  StationGenreDto toDto() => StationGenreDto(text: text, tags: tags);
+}
+
+extension StationDialX on StationDial {
+  StationDialDto toDto() =>
+      StationDialDto(band: band, dial: dial, dialStripped: dialStripped);
+}
+
+extension StationAliasesX on StationAliases {
+  StationAliasesDto toDto() =>
+      StationAliasesDto(cleanName: cleanName, alsoKnownAs: alsoKnownAs);
+}
+
+extension StationLanguageX on StationLanguage {
+  StationLanguageDto toDto() => StationLanguageDto(code: code, name: name);
+}
+
+extension StationPopularityX on StationPopularity {
+  StationPopularityDto toDto() =>
+      StationPopularityDto(global: global, byCountry: byCountry);
+}
+
+extension RadioStreamX on RadioStream {
+  StreamDto toDto() => StreamDto(
+        id: id,
+        url: url,
+        bitrate: bitrate,
+        contentType: contentType,
+        codec: codec,
+        protocol: protocol,
+        isHttps: isHttps,
+        works: works,
+      );
+}
+
+extension StationX on Station {
+  StationDto toDto() => StationDto(
+        id: id,
+        name: name,
+        slug: slug,
+        isActive: isActive,
+        logo: logo,
+        dial: dial?.toDto(),
+        aliases: aliases?.toDto(),
+        location: location?.toDto(),
+        genre: genre?.toDto(),
+        popularity: popularity?.toDto(),
+        streams: streams.map((s) => s.toDto()).toList(),
+        languages: languages?.map((l) => l.toDto()).toList(),
       );
 }
