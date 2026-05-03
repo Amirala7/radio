@@ -81,6 +81,37 @@ class StationsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> refresh() async {
+    _state = _state.copyWith(
+      page: 1,
+      items: const [],
+      hasMore: true,
+      isLoading: true,
+      error: null,
+    );
+    notifyListeners();
+    await _fetchPageOne();
+  }
+
+  Future<void> loadMore() async {
+    if (_state.isLoading || _state.isLoadingMore || !_state.hasMore) return;
+    _state = _state.copyWith(isLoadingMore: true, error: null);
+    notifyListeners();
+    final nextPage = _state.page + 1;
+    try {
+      final pageResult = await _fetchByMode(nextPage);
+      _state = _state.copyWith(
+        items: [..._state.items, ...pageResult.data],
+        page: nextPage,
+        hasMore: pageResult.data.length >= _state.limit,
+        isLoadingMore: false,
+      );
+    } on AppFailure catch (e) {
+      _state = _state.copyWith(error: e, isLoadingMore: false);
+    }
+    notifyListeners();
+  }
+
   Future<Page<Station>> _fetchByMode(int page) {
     switch (_state.mode) {
       case StationsMode.list:

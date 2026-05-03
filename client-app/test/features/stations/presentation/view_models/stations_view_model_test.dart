@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:radio/core/pagination/page.dart';
@@ -104,5 +106,63 @@ void main() {
     expect(vm.state.mode, StationsMode.byGenre);
     expect(vm.state.genreId, 7);
     expect(vm.state.items, [a]);
+  });
+
+  test('refresh re-fetches the current mode at page 1', () async {
+    when(() => popular(country: 'US', page: 1, limit: 20))
+        .thenAnswer((_) async => _pageOf([a]));
+    await vm.showPopular(country: 'US');
+
+    when(() => popular(country: 'US', page: 1, limit: 20))
+        .thenAnswer((_) async => _pageOf([a, b]));
+    await vm.refresh();
+
+    expect(vm.state.items, [a, b]);
+    expect(vm.state.page, 1);
+    verify(() => popular(country: 'US', page: 1, limit: 20)).called(2);
+  });
+
+  test('loadMore appends the next page and advances page', () async {
+    when(() => listStations(page: 1, limit: 20))
+        .thenAnswer((_) async => _pageOf(List.generate(20, (i) => Station(id: i, name: '$i', streams: const []))));
+    await vm.showList();
+    expect(vm.state.hasMore, true);
+
+    when(() => listStations(page: 2, limit: 20))
+        .thenAnswer((_) async => _pageOf([a, b], page: 2));
+    await vm.loadMore();
+
+    expect(vm.state.page, 2);
+    expect(vm.state.items.length, 22);
+    expect(vm.state.hasMore, false); // 2 < limit
+    expect(vm.state.isLoadingMore, false);
+  });
+
+  test('loadMore is a no-op when hasMore is false', () async {
+    when(() => listStations(page: 1, limit: 20))
+        .thenAnswer((_) async => _pageOf([a]));
+    await vm.showList();
+    expect(vm.state.hasMore, false);
+
+    await vm.loadMore();
+
+    verifyNever(() => listStations(page: 2, limit: 20));
+  });
+
+  test('loadMore is a no-op while isLoadingMore', () async {
+    when(() => listStations(page: 1, limit: 20))
+        .thenAnswer((_) async => _pageOf(List.generate(20, (i) => Station(id: i, name: '$i', streams: const []))));
+    await vm.showList();
+
+    final completer = Completer<Page<Station>>();
+    when(() => listStations(page: 2, limit: 20))
+        .thenAnswer((_) => completer.future);
+
+    final first = vm.loadMore();
+    final second = vm.loadMore();
+    completer.complete(_pageOf([a], page: 2));
+    await Future.wait([first, second]);
+
+    verify(() => listStations(page: 2, limit: 20)).called(1);
   });
 }
