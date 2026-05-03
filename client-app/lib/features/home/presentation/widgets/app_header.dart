@@ -17,7 +17,7 @@ class AppHeader extends StatelessWidget {
     ),
     child: Row(
       children: [
-        const Text('raDio', style: AppTypography.wordmark),
+        const Text('RADIO', style: AppTypography.wordmark),
         const Spacer(),
         IconButton(
           onPressed: null, // Placeholder for v1.

@@ -27,5 +27,5 @@ Map<String, dynamic> _$StationLocationDtoToJson(_StationLocationDto instance) =>
       'countryName': instance.countryName,
       'countryCode': instance.countryCode,
       'locationText': instance.locationText,
-      'coordinates': instance.coordinates,
+      'coordinates': instance.coordinates?.toJson(),
     };

@@ -22,6 +22,6 @@ Map<String, dynamic> _$PageDtoToJson<T>(
   Object? Function(T value) toJsonT,
 ) => <String, dynamic>{
   'data': instance.data.map(toJsonT).toList(),
-  'meta': instance.meta,
+  'meta': instance.meta.toJson(),
   'keywords': instance.keywords,
 };
