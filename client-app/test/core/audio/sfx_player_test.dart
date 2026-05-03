@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mocktail/mocktail.dart';
@@ -58,6 +60,34 @@ void main() {
     verify(() => players[SfxId.tuning1]!.stop()).called(1);
     verifyNever(() => players[SfxId.click]!.stop());
   });
+
+  test(
+    'stopLoop fired before startLoop completes still stops the player',
+    () async {
+      await sfx.init();
+
+      // Hold the in-flight startLoop's play() until we say so.
+      final playGate = Completer<void>();
+      when(
+        () => players[SfxId.tuning1]!.play(),
+      ).thenAnswer((_) => playGate.future);
+
+      // Fire startLoop without awaiting (mirrors LCD's unawaited(...)).
+      // ignore: unawaited_futures
+      sfx.startLoop(SfxId.tuning1);
+
+      // Stop while the start is still pending — this is the race that
+      // previously left the tuning loop running forever.
+      final stopFuture = sfx.stopLoop();
+
+      // Let the in-flight play() finally resolve.
+      playGate.complete();
+      await stopFuture;
+
+      verify(() => players[SfxId.tuning1]!.play()).called(1);
+      verify(() => players[SfxId.tuning1]!.stop()).called(1);
+    },
+  );
 
   test('dispose disposes every player', () async {
     await sfx.init();

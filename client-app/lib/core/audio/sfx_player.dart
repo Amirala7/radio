@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:just_audio/just_audio.dart';
 
 enum SfxId { click, switchKnob, tuning1, tuning3 }
@@ -11,6 +13,7 @@ class SfxPlayer {
   final AudioPlayerFactory _factory;
   final Map<SfxId, AudioPlayer> _players = {};
   SfxId? _activeLoop;
+  Future<void> _loopOpChain = Future<void>.value();
 
   static String assetFor(SfxId id) {
     switch (id) {
@@ -40,7 +43,21 @@ class SfxPlayer {
     await p.play();
   }
 
-  Future<void> startLoop(SfxId id) async {
+  Future<void> startLoop(SfxId id) {
+    final next = _loopOpChain
+        .catchError((_) {})
+        .then((_) => _doStartLoop(id));
+    _loopOpChain = next;
+    return next;
+  }
+
+  Future<void> stopLoop() {
+    final next = _loopOpChain.catchError((_) {}).then((_) => _doStopLoop());
+    _loopOpChain = next;
+    return next;
+  }
+
+  Future<void> _doStartLoop(SfxId id) async {
     final p = _players[id];
     if (p == null) return;
     await p.setLoopMode(LoopMode.one);
@@ -48,7 +65,7 @@ class SfxPlayer {
     _activeLoop = id;
   }
 
-  Future<void> stopLoop() async {
+  Future<void> _doStopLoop() async {
     final id = _activeLoop;
     if (id == null) return;
     await _players[id]?.stop();
