@@ -184,7 +184,7 @@ class StationsViewModel extends ChangeNotifier {
 
   StationsState get state;
 
-  /// Switch to mode=list, fetch page 1. No-op if already in list mode and not in error.
+  /// Switch to mode=list, fetch page 1.
   Future<void> showList();
 
   /// Switch to mode=popular with the given country filter, fetch page 1.
