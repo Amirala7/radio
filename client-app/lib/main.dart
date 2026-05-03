@@ -6,17 +6,16 @@ import 'package:provider/provider.dart';
 import 'core/audio/sfx_player.dart';
 import 'core/auth/auth_service.dart';
 import 'core/di/dependencies.dart';
-import 'core/theme/app_spacing.dart';
 import 'core/theme/app_theme.dart';
-import 'core/theme/app_typography.dart';
 import 'features/favorites/domain/usecases/add_favorite_use_case.dart';
 import 'features/favorites/domain/usecases/remove_favorite_use_case.dart';
 import 'features/favorites/domain/usecases/toggle_favorite_use_case.dart';
 import 'features/favorites/domain/usecases/watch_favorites_use_case.dart';
 import 'features/favorites/presentation/view_models/favorites_view_model.dart';
 import 'features/genres/domain/usecases/list_genres_use_case.dart';
-import 'features/home/presentation/view_models/home_view_model.dart';
 import 'features/genres/presentation/view_models/genres_view_model.dart';
+import 'features/home/presentation/view_models/home_view_model.dart';
+import 'features/home/presentation/views/home_screen.dart';
 import 'features/player/domain/usecases/pause_use_case.dart';
 import 'features/player/domain/usecases/play_station_use_case.dart';
 import 'features/player/domain/usecases/resume_use_case.dart';
@@ -91,41 +90,7 @@ class RadioApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Radio',
         theme: AppTheme.light,
-        home: const _BootHome(),
-      ),
-    );
-  }
-}
-
-class _BootHome extends StatelessWidget {
-  const _BootHome();
-
-  @override
-  Widget build(BuildContext context) {
-    final user = GetIt.I<AuthService>().currentUser;
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.xl,
-            vertical: AppSpacing.lg,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('raDio', style: AppTypography.wordmark),
-              const SizedBox(height: AppSpacing.xl),
-              const Text('ALL STATIONS', style: AppTypography.sectionLabel),
-              const SizedBox(height: AppSpacing.md),
-              const Divider(),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                user == null ? 'Not signed in' : 'Signed in as ${user.uid}',
-                style: AppTypography.body,
-              ),
-            ],
-          ),
-        ),
+        home: const HomeScreen(),
       ),
     );
   }
