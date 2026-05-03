@@ -22,6 +22,7 @@ class FavoritesViewModel extends ChangeNotifier {
         _toggleFavorite = toggleFavorite {
     _subscription = watchFavorites().listen(
       (items) {
+        if (_disposed) return;
         _state = _state.copyWith(
           items: items,
           isLoading: false,
@@ -30,6 +31,7 @@ class FavoritesViewModel extends ChangeNotifier {
         notifyListeners();
       },
       onError: (Object e) {
+        if (_disposed) return;
         final failure = e is AppFailure ? e : UnknownFailure(e.toString());
         _state = _state.copyWith(error: failure, isLoading: false);
         notifyListeners();
@@ -50,9 +52,32 @@ class FavoritesViewModel extends ChangeNotifier {
   bool isFavorite(int stationId) =>
       _state.items.any((f) => f.station.id == stationId);
 
-  Future<void> add(Station station) => _addFavorite(station);
-  Future<void> remove(int stationId) => _removeFavorite(stationId);
-  Future<void> toggle(Station station) => _toggleFavorite(station);
+  Future<void> add(Station station) async {
+    try {
+      await _addFavorite(station);
+    } on AppFailure catch (e) {
+      _state = _state.copyWith(error: e);
+      notifyListeners();
+    }
+  }
+
+  Future<void> remove(int stationId) async {
+    try {
+      await _removeFavorite(stationId);
+    } on AppFailure catch (e) {
+      _state = _state.copyWith(error: e);
+      notifyListeners();
+    }
+  }
+
+  Future<void> toggle(Station station) async {
+    try {
+      await _toggleFavorite(station);
+    } on AppFailure catch (e) {
+      _state = _state.copyWith(error: e);
+      notifyListeners();
+    }
+  }
 
   @override
   void dispose() {

@@ -102,6 +102,33 @@ void main() {
     expect(vm.state.items, [fav]); // preserved
   });
 
+  test('add propagates AppFailure to state.error', () async {
+    when(() => add(any())).thenThrow(const NetworkFailure());
+
+    await vm.add(station);
+
+    expect(vm.state.error, isA<NetworkFailure>());
+    expect(vm.state.items, isEmpty);
+  });
+
+  test('remove propagates AppFailure to state.error', () async {
+    when(() => remove(any())).thenThrow(const NetworkFailure());
+
+    await vm.remove(42);
+
+    expect(vm.state.error, isA<NetworkFailure>());
+    expect(vm.state.items, isEmpty);
+  });
+
+  test('toggle propagates AppFailure to state.error', () async {
+    when(() => toggle(any())).thenThrow(const NetworkFailure());
+
+    await vm.toggle(station);
+
+    expect(vm.state.error, isA<NetworkFailure>());
+    expect(vm.state.items, isEmpty);
+  });
+
   test('dispose cancels the subscription and is idempotent', () async {
     vm.dispose();
 

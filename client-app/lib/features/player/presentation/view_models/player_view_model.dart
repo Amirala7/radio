@@ -22,6 +22,7 @@ class PlayerViewModel extends ChangeNotifier {
         _resume = resume,
         _stop = stop {
     _subscription = watchPlayback().listen((s) {
+      if (_disposed) return;
       _state = s;
       notifyListeners();
     });
