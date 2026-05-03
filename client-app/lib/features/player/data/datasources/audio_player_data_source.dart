@@ -62,6 +62,8 @@ class AudioPlayerDataSource {
 
   Future<void> stop() => _player.stop();
 
+  Future<void> setVolume(double v) => _player.setVolume(v.clamp(0.0, 1.0));
+
   Future<void> dispose() async {
     await _events.close();
     await _player.dispose();

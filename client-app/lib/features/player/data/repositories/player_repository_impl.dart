@@ -59,6 +59,10 @@ class PlayerRepositoryImpl implements PlayerRepository {
   @override
   Future<void> stop() => _dataSource.stop();
 
+  @override
+  Future<void> setVolume(double volume) =>
+      _dataSource.setVolume(volume.clamp(0.0, 1.0));
+
   Future<void> dispose() async {
     await _subscription.cancel();
     await _state.close();

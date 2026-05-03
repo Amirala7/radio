@@ -11,4 +11,6 @@ abstract interface class PlayerRepository {
   Future<void> resume();
 
   Future<void> stop();
+
+  Future<void> setVolume(double volume);
 }
