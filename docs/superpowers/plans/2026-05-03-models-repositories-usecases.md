@@ -271,7 +271,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'page_meta.freezed.dart';
 
 @freezed
-class PageMeta with _$PageMeta {
+abstract class PageMeta with _$PageMeta {
   const factory PageMeta({
     required int page,
     required int limit,
@@ -293,7 +293,7 @@ import 'page_meta.dart';
 part 'page.freezed.dart';
 
 @freezed
-class Page<T> with _$Page<T> {
+abstract class Page<T> with _$Page<T> {
   const factory Page({
     required List<T> data,
     required PageMeta meta,
@@ -313,7 +313,7 @@ part 'page_meta_dto.freezed.dart';
 part 'page_meta_dto.g.dart';
 
 @freezed
-class PageMetaDto with _$PageMetaDto {
+abstract class PageMetaDto with _$PageMetaDto {
   const factory PageMetaDto({
     required int page,
     required int limit,
@@ -339,7 +339,7 @@ part 'page_dto.freezed.dart';
 part 'page_dto.g.dart';
 
 @Freezed(genericArgumentFactories: true)
-class PageDto<T> with _$PageDto<T> {
+abstract class PageDto<T> with _$PageDto<T> {
   const factory PageDto({
     required List<T> data,
     required PageMetaDto meta,
@@ -717,7 +717,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'coordinates.freezed.dart';
 
 @freezed
-class Coordinates with _$Coordinates {
+abstract class Coordinates with _$Coordinates {
   const factory Coordinates({
     required double latitude,
     required double longitude,
@@ -735,7 +735,7 @@ import 'coordinates.dart';
 part 'station_location.freezed.dart';
 
 @freezed
-class StationLocation with _$StationLocation {
+abstract class StationLocation with _$StationLocation {
   const factory StationLocation({
     int? cityId,
     String? cityName,
@@ -755,7 +755,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'station_genre.freezed.dart';
 
 @freezed
-class StationGenre with _$StationGenre {
+abstract class StationGenre with _$StationGenre {
   const factory StationGenre({
     String? text,
     List<String>? tags,
@@ -771,7 +771,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'station_dial.freezed.dart';
 
 @freezed
-class StationDial with _$StationDial {
+abstract class StationDial with _$StationDial {
   const factory StationDial({
     String? band,
     String? dial,
@@ -788,7 +788,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'station_aliases.freezed.dart';
 
 @freezed
-class StationAliases with _$StationAliases {
+abstract class StationAliases with _$StationAliases {
   const factory StationAliases({
     String? cleanName,
     String? alsoKnownAs,
@@ -804,7 +804,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'station_language.freezed.dart';
 
 @freezed
-class StationLanguage with _$StationLanguage {
+abstract class StationLanguage with _$StationLanguage {
   const factory StationLanguage({
     required String code,
     String? name,
@@ -820,7 +820,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'station_popularity.freezed.dart';
 
 @freezed
-class StationPopularity with _$StationPopularity {
+abstract class StationPopularity with _$StationPopularity {
   const factory StationPopularity({
     int? global,
     Map<String, int>? byCountry,
@@ -836,7 +836,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'radio_stream.freezed.dart';
 
 @freezed
-class RadioStream with _$RadioStream {
+abstract class RadioStream with _$RadioStream {
   const factory RadioStream({
     required String url,
     int? id,
@@ -868,7 +868,7 @@ import 'station_popularity.dart';
 part 'station.freezed.dart';
 
 @freezed
-class Station with _$Station {
+abstract class Station with _$Station {
   const factory Station({
     required int id,
     required String name,
@@ -897,7 +897,7 @@ part 'coordinates_dto.freezed.dart';
 part 'coordinates_dto.g.dart';
 
 @freezed
-class CoordinatesDto with _$CoordinatesDto {
+abstract class CoordinatesDto with _$CoordinatesDto {
   const factory CoordinatesDto({
     required double latitude,
     required double longitude,
@@ -919,7 +919,7 @@ part 'station_location_dto.freezed.dart';
 part 'station_location_dto.g.dart';
 
 @freezed
-class StationLocationDto with _$StationLocationDto {
+abstract class StationLocationDto with _$StationLocationDto {
   const factory StationLocationDto({
     int? cityId,
     String? cityName,
@@ -943,7 +943,7 @@ part 'station_genre_dto.freezed.dart';
 part 'station_genre_dto.g.dart';
 
 @freezed
-class StationGenreDto with _$StationGenreDto {
+abstract class StationGenreDto with _$StationGenreDto {
   const factory StationGenreDto({
     String? text,
     List<String>? tags,
@@ -963,7 +963,7 @@ part 'station_dial_dto.freezed.dart';
 part 'station_dial_dto.g.dart';
 
 @freezed
-class StationDialDto with _$StationDialDto {
+abstract class StationDialDto with _$StationDialDto {
   const factory StationDialDto({
     String? band,
     String? dial,
@@ -984,7 +984,7 @@ part 'station_aliases_dto.freezed.dart';
 part 'station_aliases_dto.g.dart';
 
 @freezed
-class StationAliasesDto with _$StationAliasesDto {
+abstract class StationAliasesDto with _$StationAliasesDto {
   const factory StationAliasesDto({
     String? cleanName,
     String? alsoKnownAs,
@@ -1004,7 +1004,7 @@ part 'station_language_dto.freezed.dart';
 part 'station_language_dto.g.dart';
 
 @freezed
-class StationLanguageDto with _$StationLanguageDto {
+abstract class StationLanguageDto with _$StationLanguageDto {
   const factory StationLanguageDto({
     required String code,
     String? name,
@@ -1024,7 +1024,7 @@ part 'station_popularity_dto.freezed.dart';
 part 'station_popularity_dto.g.dart';
 
 @freezed
-class StationPopularityDto with _$StationPopularityDto {
+abstract class StationPopularityDto with _$StationPopularityDto {
   const factory StationPopularityDto({
     int? global,
     Map<String, int>? byCountry,
@@ -1044,7 +1044,7 @@ part 'stream_dto.freezed.dart';
 part 'stream_dto.g.dart';
 
 @freezed
-class StreamDto with _$StreamDto {
+abstract class StreamDto with _$StreamDto {
   const factory StreamDto({
     required String url,
     int? id,
@@ -1080,7 +1080,7 @@ part 'station_dto.freezed.dart';
 part 'station_dto.g.dart';
 
 @freezed
-class StationDto with _$StationDto {
+abstract class StationDto with _$StationDto {
   const factory StationDto({
     required int id,
     required String name,
@@ -1922,7 +1922,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'genre.freezed.dart';
 
 @freezed
-class Genre with _$Genre {
+abstract class Genre with _$Genre {
   const factory Genre({
     required int id,
     String? slug,
@@ -1943,7 +1943,7 @@ part 'genre_dto.freezed.dart';
 part 'genre_dto.g.dart';
 
 @freezed
-class GenreDto with _$GenreDto {
+abstract class GenreDto with _$GenreDto {
   const factory GenreDto({
     required int id,
     String? slug,
@@ -2332,7 +2332,7 @@ import '../../../stations/domain/entities/station.dart';
 part 'favorite_station.freezed.dart';
 
 @freezed
-class FavoriteStation with _$FavoriteStation {
+abstract class FavoriteStation with _$FavoriteStation {
   const factory FavoriteStation({
     required Station station,
     required DateTime addedAt,
@@ -3268,7 +3268,7 @@ part 'playback_state.freezed.dart';
 enum PlaybackStatus { idle, loading, playing, paused, error }
 
 @freezed
-class PlaybackState with _$PlaybackState {
+abstract class PlaybackState with _$PlaybackState {
   const factory PlaybackState({
     @Default(PlaybackStatus.idle) PlaybackStatus status,
     Station? currentStation,
