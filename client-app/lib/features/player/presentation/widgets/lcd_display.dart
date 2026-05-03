@@ -23,6 +23,7 @@ class _LcdDisplayState extends State<LcdDisplay> {
   Timer? _scanTimer;
   String _scanText = '';
   PlaybackStatus? _lastStatus;
+  bool _useTuning1 = true;
 
   static const _scanChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789-_';
 
@@ -39,7 +40,9 @@ class _LcdDisplayState extends State<LcdDisplay> {
     final sfx = GetIt.I<SfxPlayer>();
     if (status == PlaybackStatus.loading) {
       _startScan();
-      unawaited(sfx.startLoop(SfxId.tuning1));
+      final id = _useTuning1 ? SfxId.tuning1 : SfxId.tuning3;
+      _useTuning1 = !_useTuning1;
+      unawaited(sfx.startLoop(id));
     } else {
       _stopScan();
       unawaited(sfx.stopLoop());

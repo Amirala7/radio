@@ -107,8 +107,13 @@ class PlayerRepositoryImpl implements PlayerRepository {
       case RawProcessingState.idle:
         return PlaybackStatus.idle;
       case RawProcessingState.loading:
-      case RawProcessingState.buffering:
         return PlaybackStatus.loading;
+      case RawProcessingState.buffering:
+        // For HTTP/ICY radio streams, just_audio keeps reporting
+        // `buffering` even after audio becomes audible — it's just
+        // topping up the network buffer. Once `playing` flips true,
+        // surface this as playing so the tuning loop can stop.
+        return snap.playing ? PlaybackStatus.playing : PlaybackStatus.loading;
       case RawProcessingState.ready:
         return snap.playing ? PlaybackStatus.playing : PlaybackStatus.paused;
       case RawProcessingState.completed:
