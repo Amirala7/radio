@@ -217,7 +217,7 @@ return $default(_that.mode,_that.items,_that.page,_that.limit,_that.isLoading,_t
 
 
 class _StationsState implements StationsState {
-  const _StationsState({this.mode = StationsMode.list, final  List<Station> items = const <Station>[], this.page = 1, this.limit = 20, this.isLoading = false, this.isLoadingMore = false, this.hasMore = true, this.query, this.country, this.genreId, this.genreSlug, this.error}): _items = items;
+  const _StationsState({this.mode = StationsMode.list, final  List<Station> items = const <Station>[], this.page = 1, this.limit = 20, this.isLoading = true, this.isLoadingMore = false, this.hasMore = true, this.query, this.country, this.genreId, this.genreSlug, this.error}): _items = items;
   
 
 @override@JsonKey() final  StationsMode mode;

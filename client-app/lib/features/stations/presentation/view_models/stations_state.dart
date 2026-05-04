@@ -14,7 +14,7 @@ abstract class StationsState with _$StationsState {
     @Default(<Station>[]) List<Station> items,
     @Default(1) int page,
     @Default(20) int limit,
-    @Default(false) bool isLoading,
+    @Default(true) bool isLoading,
     @Default(false) bool isLoadingMore,
     @Default(true) bool hasMore,
     String? query,

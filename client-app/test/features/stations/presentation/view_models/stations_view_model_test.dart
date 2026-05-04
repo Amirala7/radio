@@ -55,7 +55,10 @@ void main() {
     expect(vm.state.items, isEmpty);
     expect(vm.state.page, 1);
     expect(vm.state.limit, 20);
-    expect(vm.state.isLoading, false);
+    // Default is `true` — the app always bootstraps a fetch on launch,
+    // so we render the skeleton from frame 0 instead of flashing the
+    // empty state for one frame before bootstrap fires.
+    expect(vm.state.isLoading, true);
     expect(vm.state.isLoadingMore, false);
     expect(vm.state.hasMore, true);
     expect(vm.state.error, isNull);
