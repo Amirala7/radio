@@ -13,7 +13,7 @@ The full architectural rules and design language live in [CLAUDE.md](CLAUDE.md).
 - State: `provider` + `ChangeNotifier` ViewModels
 - DI: `get_it`
 - Models: `freezed` + `json_serializable`
-- Audio: `just_audio` + `just_audio_background` (station) and `audioplayers` (SFX) — see CLAUDE.md for why two engines
+- Audio: `just_audio` + `audio_service` (station, via a custom `RadioAudioHandler`) and `audioplayers` (SFX) — see CLAUDE.md for why two engines
 - Firebase: `firebase_core`, `firebase_auth`, `cloud_functions`, `cloud_firestore`
 - Connectivity: `connectivity_plus`
 
@@ -59,6 +59,8 @@ Inside `client-app/lib/` the structure is feature-based (`features/{stations, ge
 
 ## First-time setup
 
+> **The backend is already deployed and live.** Firebase config (`firebase_options.dart`, `google-services.json`, `GoogleService-Info.plist`) is checked into the repo, the Cloud Functions are running in `europe-west1`, anonymous auth is enabled, and the `RAPIDAPI_KEY` secret is set. **You only need step 1 below to run the app.** Steps 2–5 are for spinning up your own Firebase instance (forking, deploying to a separate project, etc.).
+
 ### 1. Clone and install client dependencies
 
 ```bash
@@ -73,7 +75,15 @@ For iOS:
 cd ios && pod install && cd ..
 ```
 
-### 2. Wire up Firebase (client)
+That's it — `flutter run` should now connect to the live backend.
+
+---
+
+### Optional: standing up your own Firebase instance
+
+Only follow the steps below if you want to deploy a separate copy of the backend (e.g. to your own Firebase project). The committed config is enough for everyday client work.
+
+#### 2. Wire up Firebase (client)
 
 The app expects `client-app/lib/firebase_options.dart` to exist. If you're starting from a fresh Firebase project:
 
@@ -83,18 +93,18 @@ cd client-app
 flutterfire configure --project <your-firebase-project-id>
 ```
 
-This generates `firebase_options.dart` and the platform config files (`google-services.json` for Android, `GoogleService-Info.plist` for iOS).
+This regenerates `firebase_options.dart` and the platform config files (`google-services.json` for Android, `GoogleService-Info.plist` for iOS), overwriting the committed defaults.
 
 Make sure **Anonymous sign-in** is enabled in the Firebase Console (Authentication → Sign-in method).
 
-### 3. Install backend dependencies
+#### 3. Install backend dependencies
 
 ```bash
 cd backend-service/functions
 npm install
 ```
 
-### 4. Set the RapidAPI secret
+#### 4. Set the RapidAPI secret
 
 The backend proxies all RapidAPI calls so the key never ships to the client.
 
@@ -107,7 +117,7 @@ The backend proxies all RapidAPI calls so the key never ships to the client.
 
    Paste the key when prompted.
 
-### 5. Deploy Firestore rules + indexes (first time only)
+#### 5. Deploy Firestore rules + indexes (first time only)
 
 ```bash
 cd backend-service
