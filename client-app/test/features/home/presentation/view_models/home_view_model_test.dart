@@ -13,9 +13,16 @@ void main() {
   setUp(() {
     stations = _MockStations();
     when(
-      () => stations.showPopular(country: any(named: 'country')),
+      () => stations.showPopular(
+        country: any(named: 'country'),
+        useCacheIfFresh: any(named: 'useCacheIfFresh'),
+      ),
     ).thenAnswer((_) async {});
-    when(() => stations.showList()).thenAnswer((_) async {});
+    when(
+      () => stations.showList(
+        useCacheIfFresh: any(named: 'useCacheIfFresh'),
+      ),
+    ).thenAnswer((_) async {});
     when(() => stations.showSearch(any())).thenAnswer((_) async {});
     when(
       () => stations.showByGenre(
@@ -27,8 +34,17 @@ void main() {
   });
 
   test('constructor does not trigger any fetch', () {
-    verifyNever(() => stations.showPopular(country: any(named: 'country')));
-    verifyNever(() => stations.showList());
+    verifyNever(
+      () => stations.showPopular(
+        country: any(named: 'country'),
+        useCacheIfFresh: any(named: 'useCacheIfFresh'),
+      ),
+    );
+    verifyNever(
+      () => stations.showList(
+        useCacheIfFresh: any(named: 'useCacheIfFresh'),
+      ),
+    );
     verifyNever(() => stations.showSearch(any()));
   });
 
@@ -39,29 +55,38 @@ void main() {
     expect(vm.state.activeGenreId, null);
   });
 
-  test('bootstrap fetches the default tab feed (popular)', () {
+  test('bootstrap fetches the default tab feed (popular) without cache', () {
     vm.bootstrap();
-    verify(() => stations.showPopular()).called(1);
+    verify(() => stations.showPopular(useCacheIfFresh: false)).called(1);
   });
 
-  test('setTab(all) calls showList and updates tab', () {
+  test('setTab(all) calls showList with cache flag and updates tab', () {
     vm.setTab(HomeTab.all);
     expect(vm.state.tab, HomeTab.all);
-    verify(() => stations.showList()).called(1);
+    verify(() => stations.showList(useCacheIfFresh: true)).called(1);
   });
 
-  test('setTab(popular) calls showPopular and updates tab', () {
+  test('setTab(popular) calls showPopular with cache flag and updates tab', () {
     vm.setTab(HomeTab.all);
     vm.setTab(HomeTab.popular);
     expect(vm.state.tab, HomeTab.popular);
-    verify(() => stations.showPopular()).called(1);
+    verify(() => stations.showPopular(useCacheIfFresh: true)).called(1);
   });
 
   test('setTab(favorites) does not call any stations fetch', () {
     vm.setTab(HomeTab.favorites);
     expect(vm.state.tab, HomeTab.favorites);
-    verifyNever(() => stations.showList());
-    verifyNever(() => stations.showPopular(country: any(named: 'country')));
+    verifyNever(
+      () => stations.showList(
+        useCacheIfFresh: any(named: 'useCacheIfFresh'),
+      ),
+    );
+    verifyNever(
+      () => stations.showPopular(
+        country: any(named: 'country'),
+        useCacheIfFresh: any(named: 'useCacheIfFresh'),
+      ),
+    );
   });
 
   test('setTab clears search and active genre', () {
@@ -90,7 +115,7 @@ void main() {
 
     expect(vm.state.isSearchOpen, false);
     expect(vm.state.searchQuery, '');
-    verify(() => stations.showPopular()).called(1);
+    verify(() => stations.showPopular(useCacheIfFresh: false)).called(1);
   });
 
   test('setSearchQuery non-empty triggers search', () {
@@ -112,13 +137,13 @@ void main() {
     verify(() => stations.showByGenre(genreId: 42)).called(1);
   });
 
-  test('clearGenre restores feed for current tab', () {
+  test('clearGenre restores feed for current tab without cache', () {
     vm.applyGenre(42, 'TECHNO');
 
     vm.clearGenre();
 
     expect(vm.state.activeGenreId, null);
     expect(vm.state.activeGenreName, null);
-    verify(() => stations.showPopular()).called(1);
+    verify(() => stations.showPopular(useCacheIfFresh: false)).called(1);
   });
 }

@@ -24,7 +24,7 @@ class HomeViewModel extends ChangeNotifier {
       activeGenreName: null,
     );
     notifyListeners();
-    _refetchForCurrentTab();
+    _refetchForCurrentTab(useCacheIfFresh: true);
   }
 
   void openSearch() {
@@ -60,13 +60,13 @@ class HomeViewModel extends ChangeNotifier {
     _refetchForCurrentTab();
   }
 
-  void _refetchForCurrentTab() {
+  void _refetchForCurrentTab({bool useCacheIfFresh = false}) {
     switch (_state.tab) {
       case HomeTab.popular:
-        _stations.showPopular();
+        _stations.showPopular(useCacheIfFresh: useCacheIfFresh);
         break;
       case HomeTab.all:
-        _stations.showList();
+        _stations.showList(useCacheIfFresh: useCacheIfFresh);
         break;
       case HomeTab.favorites:
         // No fetch — favourites is stream-driven.

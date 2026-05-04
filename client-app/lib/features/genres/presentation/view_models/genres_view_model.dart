@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../../domain/entities/genre.dart';
 import '../../domain/usecases/list_genres_use_case.dart';
 import 'genres_state.dart';
 
@@ -13,34 +14,18 @@ class GenresViewModel extends ChangeNotifier {
   GenresState _state = const GenresState();
   GenresState get state => _state;
 
+  /// Fetches every page of genres on first call, then caches the full list
+  /// for the rest of the session. Subsequent calls are no-ops unless the
+  /// previous attempt failed.
   Future<void> load() async {
     if (_state.items.isNotEmpty && _state.error == null) return;
-    await _fetchPageOne();
+    await _fetchAllPages();
   }
 
+  /// Forces a re-fetch of every page, replacing the cache.
   Future<void> refresh() async {
-    _state = const GenresState(isLoading: true);
-    notifyListeners();
-    await _fetchPageOne();
-  }
-
-  Future<void> loadMore() async {
-    if (_state.isLoading || _state.isLoadingMore || !_state.hasMore) return;
-    _state = _state.copyWith(isLoadingMore: true, error: null);
-    notifyListeners();
-    final nextPage = _state.page + 1;
-    try {
-      final pageResult = await _listGenres(page: nextPage, limit: _state.limit);
-      _state = _state.copyWith(
-        items: [..._state.items, ...pageResult.data],
-        page: nextPage,
-        hasMore: pageResult.data.length >= _state.limit,
-        isLoadingMore: false,
-      );
-    } on AppFailure catch (e) {
-      _state = _state.copyWith(error: e, isLoadingMore: false);
-    }
-    notifyListeners();
+    _state = const GenresState();
+    await _fetchAllPages();
   }
 
   void clearError() {
@@ -49,19 +34,27 @@ class GenresViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _fetchPageOne() async {
-    _state = _state.copyWith(isLoading: true, error: null);
+  Future<void> _fetchAllPages() async {
+    _state = _state.copyWith(items: const [], isLoading: true, error: null);
     notifyListeners();
+
+    final all = <Genre>[];
+    var page = 1;
     try {
-      final pageResult = await _listGenres(page: 1, limit: _state.limit);
+      while (true) {
+        final result = await _listGenres(page: page, limit: _state.limit);
+        all.addAll(result.data);
+        if (result.data.length < _state.limit) break;
+        page++;
+      }
       _state = _state.copyWith(
-        items: pageResult.data,
-        page: 1,
-        hasMore: pageResult.data.length >= _state.limit,
+        items: all,
+        page: page,
+        hasMore: false,
         isLoading: false,
       );
     } on AppFailure catch (e) {
-      _state = _state.copyWith(error: e, isLoading: false);
+      _state = _state.copyWith(items: all, error: e, isLoading: false);
     }
     notifyListeners();
   }

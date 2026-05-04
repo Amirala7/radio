@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'core/audio/sfx_player.dart';
 import 'core/auth/auth_service.dart';
 import 'core/di/dependencies.dart';
+import 'core/network/connectivity_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/volume/volume_controller.dart';
 import 'features/favorites/domain/usecases/add_favorite_use_case.dart';
@@ -60,6 +61,9 @@ class RadioApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider<VolumeController>.value(
           value: di<VolumeController>(),
+        ),
+        ChangeNotifierProvider<ConnectivityService>.value(
+          value: di<ConnectivityService>(),
         ),
         ChangeNotifierProvider(
           create: (_) => StationsViewModel(

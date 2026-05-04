@@ -6,6 +6,7 @@ import '../audio/sfx_player.dart';
 import '../auth/auth_service.dart';
 import '../haptics/haptics.dart';
 import '../network/cloud_functions_client.dart';
+import '../network/connectivity_service.dart';
 import '../volume/system_volume_sink.dart';
 import '../volume/volume_controller.dart';
 import '../../features/favorites/data/datasources/favorites_remote_data_source.dart';
@@ -26,6 +27,7 @@ void configureDependencies({required AuthService authService}) {
 
   di.registerSingleton<AuthService>(authService);
   di.registerLazySingleton<CloudFunctionsClient>(() => CloudFunctionsClient());
+  di.registerLazySingleton<ConnectivityService>(ConnectivityService.new);
 
   di.registerLazySingleton<StationRemoteDataSource>(
     () => StationRemoteDataSource(di()),

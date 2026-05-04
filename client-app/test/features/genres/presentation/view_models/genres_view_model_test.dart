@@ -10,10 +10,7 @@ import 'package:radio/features/genres/presentation/view_models/genres_view_model
 class _MockListGenres extends Mock implements ListGenresUseCase {}
 
 Page<Genre> _pageOf(List<Genre> data, {int page = 1, int limit = 100}) =>
-    Page<Genre>(
-      data: data,
-      meta: PageMeta(page: page, limit: limit),
-    );
+    Page<Genre>(data: data, meta: PageMeta(page: page, limit: limit));
 
 void main() {
   late _MockListGenres listGenres;
@@ -34,30 +31,39 @@ void main() {
     expect(vm.state.hasMore, true);
   });
 
-  test('load fetches page 1 and populates items', () async {
+  test('load fetches all pages until a short page ends the loop', () async {
+    final fullPage = List.generate(100, (i) => Genre(id: i, name: 'g$i'));
     when(
       () => listGenres(page: 1, limit: 100),
-    ).thenAnswer((_) async => _pageOf([rock, jazz]));
+    ).thenAnswer((_) async => _pageOf(fullPage));
+    when(
+      () => listGenres(page: 2, limit: 100),
+    ).thenAnswer((_) async => _pageOf([rock, jazz], page: 2));
 
     await vm.load();
 
-    expect(vm.state.items, [rock, jazz]);
+    expect(vm.state.items.length, 102);
+    expect(vm.state.items.last, jazz);
+    expect(vm.state.page, 2);
+    expect(vm.state.hasMore, false);
     expect(vm.state.isLoading, false);
-    expect(vm.state.hasMore, false); // returned 2 < limit 100
+    verify(() => listGenres(page: 1, limit: 100)).called(1);
+    verify(() => listGenres(page: 2, limit: 100)).called(1);
   });
 
-  test('load is idempotent — second call without error is a no-op', () async {
+  test('load short-circuits on subsequent calls once cached', () async {
     when(
       () => listGenres(page: 1, limit: 100),
     ).thenAnswer((_) async => _pageOf([rock]));
 
     await vm.load();
     await vm.load();
+    await vm.load();
 
     verify(() => listGenres(page: 1, limit: 100)).called(1);
   });
 
-  test('refresh always re-fetches page 1', () async {
+  test('refresh re-fetches every page', () async {
     when(
       () => listGenres(page: 1, limit: 100),
     ).thenAnswer((_) async => _pageOf([rock]));
@@ -72,35 +78,22 @@ void main() {
     verify(() => listGenres(page: 1, limit: 100)).called(2);
   });
 
-  test('loadMore appends next page and advances page', () async {
+  test('failure preserves any items already accumulated and clears loading', () async {
     final fullPage = List.generate(100, (i) => Genre(id: i, name: 'g$i'));
     when(
       () => listGenres(page: 1, limit: 100),
     ).thenAnswer((_) async => _pageOf(fullPage));
-    await vm.load();
-
     when(
       () => listGenres(page: 2, limit: 100),
-    ).thenAnswer((_) async => _pageOf([rock], page: 2));
-    await vm.loadMore();
+    ).thenThrow(const NetworkFailure());
 
-    expect(vm.state.page, 2);
-    expect(vm.state.items.length, 101);
-    expect(vm.state.hasMore, false);
+    await vm.load();
+
+    expect(vm.state.items.length, 100);
+    expect(vm.state.error, isA<NetworkFailure>());
+    expect(vm.state.isLoading, false);
+
+    vm.clearError();
+    expect(vm.state.error, isNull);
   });
-
-  test(
-    'failure populates error and clears loading; clearError clears it',
-    () async {
-      when(
-        () => listGenres(page: 1, limit: 100),
-      ).thenThrow(const NetworkFailure());
-      await vm.load();
-      expect(vm.state.error, isA<NetworkFailure>());
-      expect(vm.state.isLoading, false);
-
-      vm.clearError();
-      expect(vm.state.error, isNull);
-    },
-  );
 }
