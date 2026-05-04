@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 
 enum RawProcessingState { idle, loading, buffering, ready, completed }
 
@@ -39,10 +40,26 @@ class AudioPlayerDataSource {
 
   Stream<RawPlayerSnapshot> get events => _events.stream;
 
-  Future<void> setUrlAndPlay(String url) async {
+  Future<void> setSourceAndPlay({
+    required String id,
+    required String url,
+    required String title,
+    String? artUrl,
+  }) async {
     _lastError = null;
     try {
-      await _player.setUrl(url);
+      await _player.setAudioSource(
+        AudioSource.uri(
+          Uri.parse(url),
+          tag: MediaItem(
+            id: id,
+            title: title,
+            artUri: (artUrl != null && artUrl.isNotEmpty)
+                ? Uri.tryParse(artUrl)
+                : null,
+          ),
+        ),
+      );
     } on PlayerException catch (e) {
       _lastError = e.message ?? 'PlayerException(${e.code})';
       _emit();
@@ -58,7 +75,7 @@ class AudioPlayerDataSource {
     }
     // For live streams, _player.play() returns a Future that only resolves
     // when playback ends (i.e. stop() is called). Awaiting it would block
-    // setUrlAndPlay forever and freeze any caller relying on its completion
+    // setSourceAndPlay forever and freeze any caller relying on its completion
     // (e.g. the repo's switch-token gate). Fire-and-forget with separate
     // error handling.
     unawaited(_safePlay());

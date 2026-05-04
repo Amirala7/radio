@@ -12,6 +12,7 @@ import '../view_models/home_state.dart';
 import '../view_models/home_view_model.dart';
 import 'empty_state.dart';
 import 'station_row.dart';
+import 'station_row_skeleton.dart';
 
 String _failureMessage(AppFailure f) => switch (f) {
   NetworkFailure() => 'Network error.',
@@ -71,7 +72,10 @@ class _StationsListViewState extends State<StationsListView> {
           body: _failureMessage(favorites.error!),
         );
       }
-      if (favorites.items.isEmpty && !favorites.isLoading) {
+      if (favorites.items.isEmpty && favorites.isLoading) {
+        return const StationsListSkeleton();
+      }
+      if (favorites.items.isEmpty) {
         return const EmptyState(
           headline: 'NO FAVORITES YET',
           body: 'Tap the heart on a station to save it.',
@@ -108,13 +112,7 @@ class _StationsListViewState extends State<StationsListView> {
       );
     }
     if (stations.items.isEmpty && stations.isLoading) {
-      return const Center(
-        child: SizedBox(
-          width: 18,
-          height: 18,
-          child: CircularProgressIndicator(strokeWidth: 1.5),
-        ),
-      );
+      return const StationsListSkeleton();
     }
 
     return _buildList(

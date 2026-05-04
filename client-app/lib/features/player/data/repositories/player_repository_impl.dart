@@ -23,11 +23,11 @@ class PlayerRepositoryImpl implements PlayerRepository {
   RadioStream? _currentStream;
 
   // Token bumped on every play() and cleared once that call's
-  // setUrlAndPlay resolves. While `_pending > _completed`, snapshots from
-  // the data source describe the *previous* source (just_audio keeps
-  // ticking ready+playing for the old URL until setUrl takes effect) —
-  // dropping them prevents the LCD from flashing back to LIVE before the
-  // new station has actually started tuning.
+  // setSourceAndPlay resolves. While `_pending > _completed`, snapshots
+  // from the data source describe the *previous* source (just_audio keeps
+  // ticking ready+playing for the old URL until the new source takes
+  // effect) — dropping them prevents the LCD from flashing back to LIVE
+  // before the new station has actually started tuning.
   int _pending = 0;
   int _completed = 0;
   bool get _switching => _pending > _completed;
@@ -63,7 +63,12 @@ class PlayerRepositoryImpl implements PlayerRepository {
       ),
     );
     try {
-      await _dataSource.setUrlAndPlay(picked.url);
+      await _dataSource.setSourceAndPlay(
+        id: station.id.toString(),
+        url: picked.url,
+        title: station.name,
+        artUrl: station.logo,
+      );
     } finally {
       if (token > _completed) _completed = token;
     }

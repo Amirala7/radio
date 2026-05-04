@@ -31,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.surfaceBody,
+    resizeToAvoidBottomInset: false,
     body: SafeArea(
       bottom: false,
       child: Column(

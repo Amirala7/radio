@@ -19,6 +19,11 @@ class LcdDisplay extends StatefulWidget {
   State<LcdDisplay> createState() => _LcdDisplayState();
 }
 
+final TextStyle _lcdDecorative = AppTypography.lcdSmall.copyWith(
+  fontSize: 10,
+  height: 1,
+);
+
 class _LcdDisplayState extends State<LcdDisplay> {
   PlaybackStatus? _lastStatus;
   bool _useTuning1 = true;
@@ -26,7 +31,6 @@ class _LcdDisplayState extends State<LcdDisplay> {
   // Locked geometry — every row reserves its space so the bezel never grows
   // or shrinks as state changes.
   static const double _bigRowHeight = 30;
-  static const double _midRowHeight = 16;
 
   @override
   void dispose() {
@@ -55,8 +59,7 @@ class _LcdDisplayState extends State<LcdDisplay> {
     _onStatusChanged(state.status);
 
     final big = _bigText(state);
-    final mid = _midText(state);
-    final live = _liveText(state);
+    final bottom = _bottomText(state);
 
     final screen = ClipRRect(
       borderRadius: BorderRadius.circular(2),
@@ -72,15 +75,14 @@ class _LcdDisplayState extends State<LcdDisplay> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('FM', style: AppTypography.lcdSmall),
-                    Text('STEREO', style: AppTypography.lcdSmall),
+                    Text('FM', style: _lcdDecorative),
+                    Text('STEREO', style: _lcdDecorative),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 SizedBox(
                   height: _bigRowHeight,
                   child: Row(
@@ -91,32 +93,18 @@ class _LcdDisplayState extends State<LcdDisplay> {
                         const SizedBox(width: 6),
                       ],
                       Expanded(
-                        child: Text(
-                          big,
+                        child: _LcdMarquee(
+                          text: big,
                           style: AppTypography.lcdLarge,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
                         ),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(
-                  height: _midRowHeight,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      mid,
-                      style: AppTypography.lcdSmall,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(live, style: AppTypography.lcdSmall),
+                    Text(bottom, style: AppTypography.lcdSmall),
                   ],
                 ),
               ],
@@ -224,34 +212,24 @@ class _LcdDisplayState extends State<LcdDisplay> {
     }
   }
 
-  String _midText(PlaybackState state) {
+  String _bottomText(PlaybackState state) {
     switch (state.status) {
       case PlaybackStatus.idle:
         return 'TAP A STATION';
       case PlaybackStatus.loading:
-        return '';
-      case PlaybackStatus.playing:
       case PlaybackStatus.paused:
         return '';
+      case PlaybackStatus.playing:
+        final loc = state.currentStation?.location;
+        final city = loc?.cityName?.toUpperCase().trim();
+        final country = loc?.countryCode?.toUpperCase().trim();
+        final tag = (city != null && city.isNotEmpty)
+            ? city
+            : (country ?? '');
+        return tag.isEmpty ? 'LIVE' : 'LIVE - $tag';
       case PlaybackStatus.error:
-        return _failureText(state.error) ?? 'RETRY';
+        return state.error == null ? 'RETRY' : 'SOMETHING WENT WRONG';
     }
-  }
-
-  String? _failureText(Object? error) {
-    if (error == null) return null;
-    return 'Something went wrong';
-  }
-
-  String _liveText(PlaybackState state) {
-    if (state.status != PlaybackStatus.playing) return '';
-    final loc = state.currentStation?.location;
-    final city = loc?.cityName?.toUpperCase().trim();
-    final country = loc?.countryCode?.toUpperCase().trim();
-    final tag = (city != null && city.isNotEmpty)
-        ? city
-        : (country ?? '');
-    return tag.isEmpty ? 'LIVE' : 'LIVE • $tag';
   }
 }
 
@@ -266,4 +244,124 @@ class _Screw extends StatelessWidget {
     fit: BoxFit.contain,
     filterQuality: FilterQuality.medium,
   );
+}
+
+class _LcdMarquee extends StatefulWidget {
+  const _LcdMarquee({required this.text, required this.style});
+
+  final String text;
+  final TextStyle style;
+
+  @override
+  State<_LcdMarquee> createState() => _LcdMarqueeState();
+}
+
+class _LcdMarqueeState extends State<_LcdMarquee>
+    with SingleTickerProviderStateMixin {
+  // Marquee scroll speed in logical pixels per second.
+  static const double _speed = 40;
+  // Spacer between the trailing copy and the leading copy of the text.
+  static const double _gap = 32;
+
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this);
+  }
+
+  @override
+  void didUpdateWidget(_LcdMarquee oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text) {
+      _controller.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _ensureRunning(Duration duration) {
+    if (_controller.duration != duration) {
+      _controller.duration = duration;
+    }
+    if (!_controller.isAnimating) _controller.repeat();
+  }
+
+  void _ensureStopped() {
+    if (_controller.isAnimating) _controller.stop();
+    if (_controller.value != 0) _controller.value = 0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        final tp = TextPainter(
+          text: TextSpan(text: widget.text, style: widget.style),
+          textDirection: TextDirection.ltr,
+          maxLines: 1,
+        )..layout();
+        final textWidth = tp.width;
+
+        if (textWidth <= maxWidth) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _ensureStopped();
+          });
+          return Text(
+            widget.text,
+            style: widget.style,
+            maxLines: 1,
+            softWrap: false,
+          );
+        }
+
+        final cycleWidth = textWidth + _gap;
+        final duration = Duration(
+          milliseconds: (cycleWidth / _speed * 1000).round(),
+        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _ensureRunning(duration);
+        });
+
+        return ClipRect(
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (_, _) {
+              return OverflowBox(
+                alignment: Alignment.centerLeft,
+                maxWidth: double.infinity,
+                child: Transform.translate(
+                  offset: Offset(-cycleWidth * _controller.value, 0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.text,
+                        style: widget.style,
+                        maxLines: 1,
+                        softWrap: false,
+                      ),
+                      const SizedBox(width: _gap),
+                      Text(
+                        widget.text,
+                        style: widget.style,
+                        maxLines: 1,
+                        softWrap: false,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 }

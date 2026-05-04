@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:provider/provider.dart';
 
 import 'core/audio/sfx_player.dart';
@@ -33,6 +34,12 @@ import 'firebase_options.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  await JustAudioBackground.init(
+    androidNotificationChannelId: 'app.radio.audio',
+    androidNotificationChannelName: 'Radio playback',
+    androidNotificationOngoing: true,
+  );
 
   final auth = AuthService();
   await auth.ensureSignedIn();

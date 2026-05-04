@@ -27,7 +27,14 @@ void main() {
     ds = _MockDataSource();
     events = StreamController<RawPlayerSnapshot>.broadcast();
     when(() => ds.events).thenAnswer((_) => events.stream);
-    when(() => ds.setUrlAndPlay(any())).thenAnswer((_) async {});
+    when(
+      () => ds.setSourceAndPlay(
+        id: any(named: 'id'),
+        url: any(named: 'url'),
+        title: any(named: 'title'),
+        artUrl: any(named: 'artUrl'),
+      ),
+    ).thenAnswer((_) async {});
     when(() => ds.pause()).thenAnswer((_) async {});
     when(() => ds.resume()).thenAnswer((_) async {});
     when(() => ds.stop()).thenAnswer((_) async {});
@@ -50,18 +57,30 @@ void main() {
       expect(emitted.first.status, PlaybackStatus.loading);
       expect(emitted.first.currentStation, station);
       expect(emitted.first.currentStream, goodStream);
-      verify(() => ds.setUrlAndPlay('https://good')).called(1);
+      verify(
+        () => ds.setSourceAndPlay(
+          id: '1',
+          url: 'https://good',
+          title: 'X',
+          artUrl: any(named: 'artUrl'),
+        ),
+      ).called(1);
 
       await sub.cancel();
     });
 
-    test('ignores snapshots that arrive while setUrlAndPlay is in flight',
+    test('ignores snapshots that arrive while setSourceAndPlay is in flight',
         () async {
       // Simulate just_audio still emitting the previous station's
       // ready+playing snapshots while we're switching sources.
       final setUrlGate = Completer<void>();
       when(
-        () => ds.setUrlAndPlay(any()),
+        () => ds.setSourceAndPlay(
+          id: any(named: 'id'),
+          url: any(named: 'url'),
+          title: any(named: 'title'),
+          artUrl: any(named: 'artUrl'),
+        ),
       ).thenAnswer((_) => setUrlGate.future);
 
       final emitted = <PlaybackState>[];
@@ -97,7 +116,14 @@ void main() {
 
       expect(emitted.last.status, PlaybackStatus.error);
       expect(emitted.last.error, isA<UnknownFailure>());
-      verifyNever(() => ds.setUrlAndPlay(any()));
+      verifyNever(
+        () => ds.setSourceAndPlay(
+          id: any(named: 'id'),
+          url: any(named: 'url'),
+          title: any(named: 'title'),
+          artUrl: any(named: 'artUrl'),
+        ),
+      );
 
       await sub.cancel();
     });
