@@ -1,5 +1,5 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:radio/core/audio/sfx_player.dart';
 
@@ -7,7 +7,9 @@ class _MockAudioPlayer extends Mock implements AudioPlayer {}
 
 void main() {
   setUpAll(() {
-    registerFallbackValue(LoopMode.off);
+    registerFallbackValue(ReleaseMode.stop);
+    registerFallbackValue(AssetSource('placeholder'));
+    registerFallbackValue(Duration.zero);
   });
 
   late List<_MockAudioPlayer> created;
@@ -18,10 +20,12 @@ void main() {
     sfx = SfxPlayer(
       playerFactory: () {
         final p = _MockAudioPlayer();
-        when(() => p.setAsset(any())).thenAnswer((_) async => Duration.zero);
-        when(() => p.setLoopMode(any())).thenAnswer((_) async {});
+        when(() => p.setReleaseMode(any())).thenAnswer((_) async {});
+        when(() => p.setSource(any())).thenAnswer((_) async {});
         when(() => p.seek(any())).thenAnswer((_) async {});
-        when(() => p.play()).thenAnswer((_) async {});
+        when(() => p.resume()).thenAnswer((_) async {});
+        when(() => p.play(any())).thenAnswer((_) async {});
+        when(() => p.stop()).thenAnswer((_) async {});
         when(() => p.dispose()).thenAnswer((_) async {});
         created.add(p);
         return p;
@@ -29,42 +33,53 @@ void main() {
     );
   });
 
+  Matcher isAssetSource(String path) => predicate<Source>(
+    (s) => s is AssetSource && s.path == path,
+    'AssetSource("$path")',
+  );
+
   test('init creates one player per one-shot SFX and loads its asset', () async {
     await sfx.init();
     expect(created.length, 2);
     verify(
-      () => created[0].setAsset(SfxPlayer.assetFor(SfxId.click)),
+      () => created[0].setSource(
+        any(that: isAssetSource(SfxPlayer.assetFor(SfxId.click))),
+      ),
     ).called(1);
     verify(
-      () => created[1].setAsset(SfxPlayer.assetFor(SfxId.switchKnob)),
+      () => created[1].setSource(
+        any(that: isAssetSource(SfxPlayer.assetFor(SfxId.switchKnob))),
+      ),
     ).called(1);
   });
 
-  test('playOnce seeks the matching pre-loaded player and plays', () async {
+  test('playOnce seeks the matching pre-loaded player and resumes', () async {
     await sfx.init();
     await sfx.playOnce(SfxId.click);
     verifyInOrder([
       () => created[0].seek(Duration.zero),
-      () => created[0].play(),
+      () => created[0].resume(),
     ]);
   });
 
-  test('startLoop creates a fresh player, sets it up, and plays', () async {
+  test('startLoop creates a fresh player, sets loop mode, and plays', () async {
     await sfx.init();
     await sfx.startLoop(SfxId.tuning1);
     final loop = created.last;
+    verify(() => loop.setReleaseMode(ReleaseMode.loop)).called(1);
     verify(
-      () => loop.setAsset(SfxPlayer.assetFor(SfxId.tuning1)),
+      () => loop.play(
+        any(that: isAssetSource(SfxPlayer.assetFor(SfxId.tuning1))),
+      ),
     ).called(1);
-    verify(() => loop.setLoopMode(LoopMode.one)).called(1);
-    verify(() => loop.play()).called(1);
   });
 
-  test('stopLoop disposes the active loop player', () async {
+  test('stopLoop stops and disposes the active loop player', () async {
     await sfx.init();
     await sfx.startLoop(SfxId.tuning1);
     final loop = created.last;
     await sfx.stopLoop();
+    verify(() => loop.stop()).called(1);
     verify(() => loop.dispose()).called(1);
   });
 

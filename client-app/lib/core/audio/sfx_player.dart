@@ -1,9 +1,14 @@
-import 'package:just_audio/just_audio.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 enum SfxId { click, switchKnob, tuning1, tuning3 }
 
 typedef AudioPlayerFactory = AudioPlayer Function();
 
+/// SFX uses `audioplayers`, deliberately not `just_audio`. The station
+/// player is `just_audio` + `just_audio_background`, which only supports
+/// one AudioPlayer instance per process — keeping SFX on a separate
+/// engine avoids contention over that single slot.
+///
 /// One-shots (click, knob) are pre-loaded for fast playback.
 /// Loops (tuning) use dispose-and-create — the only way to guarantee
 /// audio actually stops is to throw the player away.
@@ -20,20 +25,21 @@ class SfxPlayer {
   static String assetFor(SfxId id) {
     switch (id) {
       case SfxId.click:
-        return 'assets/sounds/DIA_LG_perc_kata_click.wav';
+        return 'sounds/DIA_LG_perc_kata_click.wav';
       case SfxId.switchKnob:
-        return 'assets/sounds/SwitchLampKnob_S08FO.2508.wav';
+        return 'sounds/SwitchLampKnob_S08FO.2508.wav';
       case SfxId.tuning1:
-        return 'assets/sounds/OS_VMT_SFX_Old_Radio_Tuning_1.wav';
+        return 'sounds/OS_VMT_SFX_Old_Radio_Tuning_1.wav';
       case SfxId.tuning3:
-        return 'assets/sounds/OS_VMT_SFX_Old_Radio_Tuning_3.wav';
+        return 'sounds/OS_VMT_SFX_Old_Radio_Tuning_3.wav';
     }
   }
 
   Future<void> init() async {
     for (final id in _oneShotIds) {
       final p = _factory();
-      await p.setAsset(assetFor(id));
+      await p.setReleaseMode(ReleaseMode.stop);
+      await p.setSource(AssetSource(assetFor(id)));
       _oneShots[id] = p;
     }
   }
@@ -42,7 +48,7 @@ class SfxPlayer {
     final p = _oneShots[id];
     if (p == null) return;
     await p.seek(Duration.zero);
-    await p.play();
+    await p.resume();
   }
 
   Future<void> startLoop(SfxId id) async {
@@ -50,9 +56,8 @@ class SfxPlayer {
     final p = _factory();
     _loop = p;
     try {
-      await p.setAsset(assetFor(id));
-      await p.setLoopMode(LoopMode.one);
-      await p.play();
+      await p.setReleaseMode(ReleaseMode.loop);
+      await p.play(AssetSource(assetFor(id)));
     } catch (_) {
       // A concurrent stopLoop disposed us mid-setup. Nothing to do.
     }
@@ -61,7 +66,11 @@ class SfxPlayer {
   Future<void> stopLoop() async {
     final p = _loop;
     _loop = null;
-    await p?.dispose();
+    if (p == null) return;
+    try {
+      await p.stop();
+    } catch (_) {}
+    await p.dispose();
   }
 
   Future<void> dispose() async {
@@ -69,7 +78,8 @@ class SfxPlayer {
       await p.dispose();
     }
     _oneShots.clear();
-    await _loop?.dispose();
+    final loop = _loop;
     _loop = null;
+    if (loop != null) await loop.dispose();
   }
 }
