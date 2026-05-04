@@ -9,7 +9,7 @@ class AppTypography {
   static const String _inter = 'Inter';
   static const String _plex = 'IBMPlexSans';
   static const String _mono = 'RobotoMono';
-  static const String _lcd = 'DSEG14';
+  static const String _lcd = 'VT323';
 
   static const FontVariation _wght400 = FontVariation('wght', 400);
   static const FontVariation _wght500 = FontVariation('wght', 500);
@@ -76,20 +76,21 @@ class AppTypography {
   );
 
   // Hardware micro-labels — `POWER`, `VOLUME`, `MIN`, `MAX`.
+  // Panel is dark, so default color is the on-dark variant.
   static const TextStyle microLabel = TextStyle(
     fontFamily: _mono,
     fontVariations: [_wght500],
     fontSize: 9,
     height: 1.2,
     letterSpacing: 1.4,
-    color: AppColors.textPrimary,
+    color: AppColors.textOnDark,
   );
 
   // LCD station name (the big `NTS RADIO` line).
+  // VT323 ships Regular only — bold weight would synthesize and look fuzzy.
   static const TextStyle lcdLarge = TextStyle(
     fontFamily: _lcd,
-    fontWeight: FontWeight.w700,
-    fontSize: 22,
+    fontSize: 36,
     height: 1,
     color: AppColors.textLcd,
   );
@@ -97,8 +98,7 @@ class AppTypography {
   // LCD secondary lines (track, status, elapsed time).
   static const TextStyle lcdSmall = TextStyle(
     fontFamily: _lcd,
-    fontWeight: FontWeight.w400,
-    fontSize: 12,
+    fontSize: 14,
     height: 1.1,
     color: AppColors.textLcd,
   );

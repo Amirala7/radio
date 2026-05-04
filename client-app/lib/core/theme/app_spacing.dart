@@ -11,6 +11,6 @@ class AppSpacing {
   // Component-specific.
   static const double stationTileSize = 96;
   static const double stationRowVerticalGap = 18;
-  static const double panelHeight = 220;
+  static const double panelHeight = 240;
   static const double hairline = 0.5;
 }

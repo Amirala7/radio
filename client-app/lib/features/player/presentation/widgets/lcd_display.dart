@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
@@ -11,6 +10,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/playback_state.dart';
 import '../view_models/player_view_model.dart';
+import 'lcd_playing_indicator.dart';
 
 class LcdDisplay extends StatefulWidget {
   const LcdDisplay({super.key});
@@ -20,16 +20,16 @@ class LcdDisplay extends StatefulWidget {
 }
 
 class _LcdDisplayState extends State<LcdDisplay> {
-  Timer? _scanTimer;
-  String _scanText = '';
   PlaybackStatus? _lastStatus;
   bool _useTuning1 = true;
 
-  static const _scanChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789-_';
+  // Locked geometry — every row reserves its space so the bezel never grows
+  // or shrinks as state changes.
+  static const double _bigRowHeight = 30;
+  static const double _midRowHeight = 16;
 
   @override
   void dispose() {
-    _scanTimer?.cancel();
     GetIt.I<SfxPlayer>().stopLoop();
     super.dispose();
   }
@@ -39,32 +39,12 @@ class _LcdDisplayState extends State<LcdDisplay> {
     _lastStatus = status;
     final sfx = GetIt.I<SfxPlayer>();
     if (status == PlaybackStatus.loading) {
-      _startScan();
       final id = _useTuning1 ? SfxId.tuning1 : SfxId.tuning3;
       _useTuning1 = !_useTuning1;
       unawaited(sfx.startLoop(id));
     } else {
-      _stopScan();
       unawaited(sfx.stopLoop());
     }
-  }
-
-  void _startScan() {
-    _scanTimer?.cancel();
-    _scanTimer = Timer.periodic(const Duration(milliseconds: 80), (_) {
-      final rnd = Random();
-      final buf = List.generate(
-        8,
-        (_) => _scanChars[rnd.nextInt(_scanChars.length)],
-      ).join();
-      if (mounted) setState(() => _scanText = buf);
-    });
-  }
-
-  void _stopScan() {
-    _scanTimer?.cancel();
-    _scanTimer = null;
-    if (mounted) setState(() => _scanText = '');
   }
 
   @override
@@ -77,57 +57,154 @@ class _LcdDisplayState extends State<LcdDisplay> {
     final big = _bigText(state);
     final mid = _midText(state);
     final live = _liveText(state);
-    final time = _timeText(state);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceLcd,
-        border: Border.all(color: AppColors.textLcd, width: 1.5),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+    final screen = ClipRRect(
+      borderRadius: BorderRadius.circular(2),
+      child: Stack(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('FM', style: AppTypography.lcdSmall),
-              Text('STEREO', style: AppTypography.lcdSmall),
-            ],
+          Container(
+            color: AppColors.surfaceLcd,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('FM', style: AppTypography.lcdSmall),
+                    Text('STEREO', style: AppTypography.lcdSmall),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                SizedBox(
+                  height: _bigRowHeight,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (state.status == PlaybackStatus.playing) ...[
+                        const LcdPlayingIndicator(),
+                        const SizedBox(width: 6),
+                      ],
+                      Expanded(
+                        child: Text(
+                          big,
+                          style: AppTypography.lcdLarge,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: _midRowHeight,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      mid,
+                      style: AppTypography.lcdSmall,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(live, style: AppTypography.lcdSmall),
+                  ],
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 4),
-          SizedBox(
-            height: 28,
-            child: Center(
-              child: Text(
-                big,
-                style: AppTypography.lcdLarge,
-                overflow: TextOverflow.ellipsis,
+          // Inner shadow on the top edge — subtle "the LCD sits below the
+          // bezel lip" cue. Top-only and very light.
+          const Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            height: 6,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x1F000000), Color(0x00000000)],
+                  ),
+                ),
               ),
             ),
           ),
-          if (mid.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                mid,
-                style: AppTypography.lcdSmall,
-                overflow: TextOverflow.ellipsis,
+          // Inner shadow on the top edge — subtle "the LCD sits below the
+          // bezel lip" cue. Top-only and very light.
+          const Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            height: 20,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color.fromARGB(13, 0, 0, 0), Color(0x00000000)],
+                  ),
+                ),
               ),
             ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(live, style: AppTypography.lcdSmall),
-              Text(time, style: AppTypography.lcdSmall),
-            ],
           ),
+          // Soft white highlight on the bottom edge — completes the inset
+          // bevel feel: dark above, light below.
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 6,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x00FFFFFF), Color(0x1FFFFFFF)],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.bezelHighlight,
+        borderRadius: BorderRadius.circular(6),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x80000000),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+            child: screen,
+          ),
+          const Positioned(left: 4, top: 4, child: _Screw()),
+          const Positioned(right: 4, top: 4, child: _Screw()),
+          const Positioned(left: 4, bottom: 4, child: _Screw()),
+          const Positioned(right: 4, bottom: 4, child: _Screw()),
         ],
       ),
     );
@@ -138,7 +215,7 @@ class _LcdDisplayState extends State<LcdDisplay> {
       case PlaybackStatus.idle:
         return 'STANDBY';
       case PlaybackStatus.loading:
-        return _scanText.isEmpty ? 'TUNING…' : _scanText;
+        return 'TUNING…';
       case PlaybackStatus.playing:
       case PlaybackStatus.paused:
         return (state.currentStation?.name ?? '').toUpperCase();
@@ -163,28 +240,30 @@ class _LcdDisplayState extends State<LcdDisplay> {
 
   String? _failureText(Object? error) {
     if (error == null) return null;
-    return error.toString();
+    return 'Something went wrong';
   }
 
   String _liveText(PlaybackState state) {
-    if (state.status == PlaybackStatus.playing) {
-      final city = state.currentStation?.location?.cityName;
-      final code = (city != null && city.length >= 3)
-          ? city.substring(0, 3).toUpperCase()
-          : (state.currentStation?.location?.countryCode ?? '').toUpperCase();
-      return code.isEmpty ? 'LIVE' : 'LIVE • $code';
-    }
-    return '';
+    if (state.status != PlaybackStatus.playing) return '';
+    final loc = state.currentStation?.location;
+    final city = loc?.cityName?.toUpperCase().trim();
+    final country = loc?.countryCode?.toUpperCase().trim();
+    final tag = (city != null && city.isNotEmpty)
+        ? city
+        : (country ?? '');
+    return tag.isEmpty ? 'LIVE' : 'LIVE • $tag';
   }
+}
 
-  String _timeText(PlaybackState state) {
-    if (state.status == PlaybackStatus.idle ||
-        state.status == PlaybackStatus.error) {
-      return '--:--';
-    }
-    final secs = state.position.inSeconds;
-    final mm = (secs ~/ 60).toString().padLeft(2, '0');
-    final ss = (secs % 60).toString().padLeft(2, '0');
-    return '$mm:$ss';
-  }
+class _Screw extends StatelessWidget {
+  const _Screw();
+
+  @override
+  Widget build(BuildContext context) => Image.asset(
+    'assets/images/flat-head-cross-slot-screw-close-up-png.png',
+    width: 14,
+    height: 14,
+    fit: BoxFit.contain,
+    filterQuality: FilterQuality.medium,
+  );
 }

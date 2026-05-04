@@ -18,6 +18,7 @@ void main() {
     sink = _MockSink();
     when(() => player.setVolume(any())).thenAnswer((_) async {});
     when(() => sink.set(any())).thenAnswer((_) async {});
+    when(() => sink.changes).thenAnswer((_) => const Stream<double>.empty());
     controller = VolumeController(player: player, system: sink);
   });
 

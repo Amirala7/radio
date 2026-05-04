@@ -49,68 +49,60 @@ class _PowerButtonState extends State<PowerButton> {
 
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Text('POWER', style: AppTypography.microLabel),
+        const Text('PLAY/STOP', style: AppTypography.microLabel),
         const SizedBox(height: AppSpacing.sm),
-        GestureDetector(
-          onTap: _onTap,
-          child: AnimatedScale(
-            scale: _pressed ? 0.96 : 1,
-            duration: const Duration(milliseconds: 80),
-            child: SizedBox(
-              width: 48,
-              height: 48,
-              child: CustomPaint(painter: _ButtonPainter(pressed: _pressed)),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: _onTap,
+              child: AnimatedScale(
+                scale: _pressed ? 0.96 : 1,
+                duration: const Duration(milliseconds: 80),
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: CustomPaint(
+                    painter: _ButtonPainter(pressed: _pressed),
+                  ),
+                ),
+              ),
             ),
-          ),
+            const SizedBox(width: AppSpacing.sm),
+            _Led(on: isPlaying),
+          ],
         ),
-        const SizedBox(height: AppSpacing.sm),
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: isPlaying
-                ? AppColors.indicatorPower
-                : AppColors.indicatorPower.withValues(alpha: 0.18),
-            shape: BoxShape.circle,
-            boxShadow: isPlaying
-                ? [
-                    BoxShadow(
-                      color: AppColors.indicatorPower.withValues(alpha: 0.6),
-                      blurRadius: 6,
-                    ),
-                  ]
-                : null,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        const _SpeakerGrille(),
       ],
     );
   }
 }
 
-class _SpeakerGrille extends StatelessWidget {
-  const _SpeakerGrille();
+class _Led extends StatelessWidget {
+  const _Led({required this.on});
+
+  final bool on;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: 24,
-    height: 24,
-    child: GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: 9,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 3,
-        crossAxisSpacing: 3,
-      ),
-      itemBuilder: (_, _) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.knobDark.withValues(alpha: 0.65),
-          shape: BoxShape.circle,
-        ),
-      ),
+  Widget build(BuildContext context) => Container(
+    width: 7,
+    height: 7,
+    decoration: BoxDecoration(
+      color: on
+          ? AppColors.indicatorPower
+          : AppColors.indicatorPower.withValues(alpha: 0.18),
+      shape: BoxShape.circle,
+      boxShadow: on
+          ? [
+              BoxShadow(
+                color: AppColors.indicatorPower.withValues(alpha: 0.7),
+                blurRadius: 6,
+                spreadRadius: 0.5,
+              ),
+            ]
+          : null,
     ),
   );
 }
@@ -126,22 +118,30 @@ class _ButtonPainter extends CustomPainter {
     final outerR = size.shortestSide / 2;
     final innerR = outerR - 4;
 
+    // Recessed dark ring around the button.
     final ringPaint = Paint()
       ..shader = RadialGradient(
-        colors: [AppColors.knobDark, AppColors.surfacePanelDark],
-        stops: const [0.6, 1.0],
+        colors: [AppColors.bezelDark, AppColors.panelDark],
+        stops: const [0.9, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: outerR));
     canvas.drawCircle(center, outerR, ringPaint);
 
+    // Machined silver button face.
     final btnPaint = Paint()
       ..shader = RadialGradient(
-        center: const Alignment(-0.3, -0.4),
-        radius: 0.95,
+        center: const Alignment(-0.3, -0.5),
+        radius: 1.0,
         colors: pressed
             ? [AppColors.knobLight.withValues(alpha: 0.85), AppColors.knobDark]
             : [AppColors.knobLight, AppColors.knobDark],
       ).createShader(Rect.fromCircle(center: center, radius: innerR));
     canvas.drawCircle(center, innerR, btnPaint);
+
+    // Subtle bottom-edge shadow inside the button.
+    final innerShadow = Paint()
+      ..color = const Color(0xFF000000).withValues(alpha: 0.25)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.inner, 1.5);
+    canvas.drawCircle(center, innerR - 0.5, innerShadow);
   }
 
   @override

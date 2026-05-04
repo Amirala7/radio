@@ -43,6 +43,29 @@ class AudioPlayerDataSource {
     _lastError = null;
     try {
       await _player.setUrl(url);
+    } on PlayerException catch (e) {
+      _lastError = e.message ?? 'PlayerException(${e.code})';
+      _emit();
+      return;
+    } on PlayerInterruptedException catch (e) {
+      _lastError = e.message ?? 'PlayerInterruptedException';
+      _emit();
+      return;
+    } catch (e) {
+      _lastError = e.toString();
+      _emit();
+      return;
+    }
+    // For live streams, _player.play() returns a Future that only resolves
+    // when playback ends (i.e. stop() is called). Awaiting it would block
+    // setUrlAndPlay forever and freeze any caller relying on its completion
+    // (e.g. the repo's switch-token gate). Fire-and-forget with separate
+    // error handling.
+    unawaited(_safePlay());
+  }
+
+  Future<void> _safePlay() async {
+    try {
       await _player.play();
     } on PlayerException catch (e) {
       _lastError = e.message ?? 'PlayerException(${e.code})';

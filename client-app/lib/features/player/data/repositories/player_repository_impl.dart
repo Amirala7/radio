@@ -22,6 +22,16 @@ class PlayerRepositoryImpl implements PlayerRepository {
   Station? _currentStation;
   RadioStream? _currentStream;
 
+  // Token bumped on every play() and cleared once that call's
+  // setUrlAndPlay resolves. While `_pending > _completed`, snapshots from
+  // the data source describe the *previous* source (just_audio keeps
+  // ticking ready+playing for the old URL until setUrl takes effect) —
+  // dropping them prevents the LCD from flashing back to LIVE before the
+  // new station has actually started tuning.
+  int _pending = 0;
+  int _completed = 0;
+  bool get _switching => _pending > _completed;
+
   @override
   Stream<PlaybackState> get state => _state.stream;
 
@@ -43,6 +53,7 @@ class PlayerRepositoryImpl implements PlayerRepository {
     }
     _currentStation = station;
     _currentStream = picked;
+    final token = ++_pending;
     _emit(
       _current.copyWith(
         status: PlaybackStatus.loading,
@@ -51,7 +62,11 @@ class PlayerRepositoryImpl implements PlayerRepository {
         error: null,
       ),
     );
-    await _dataSource.setUrlAndPlay(picked.url);
+    try {
+      await _dataSource.setUrlAndPlay(picked.url);
+    } finally {
+      if (token > _completed) _completed = token;
+    }
   }
 
   @override
@@ -87,6 +102,10 @@ class PlayerRepositoryImpl implements PlayerRepository {
       );
       return;
     }
+    // Drop snapshots that describe the previous source while a station
+    // switch is in flight. Keep emitting errors above so failures aren't
+    // hidden by the gate.
+    if (_switching) return;
     final isBuffering = snap.processingState == RawProcessingState.buffering;
     final status = _statusFor(snap);
     _emit(

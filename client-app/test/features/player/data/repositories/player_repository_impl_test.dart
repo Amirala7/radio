@@ -55,6 +55,38 @@ void main() {
       await sub.cancel();
     });
 
+    test('ignores snapshots that arrive while setUrlAndPlay is in flight',
+        () async {
+      // Simulate just_audio still emitting the previous station's
+      // ready+playing snapshots while we're switching sources.
+      final setUrlGate = Completer<void>();
+      when(
+        () => ds.setUrlAndPlay(any()),
+      ).thenAnswer((_) => setUrlGate.future);
+
+      final emitted = <PlaybackState>[];
+      final sub = repo.state.listen(emitted.add);
+
+      final pending = repo.play(station);
+      await Future<void>.delayed(Duration.zero);
+      // Stale snapshot from the prior source — must NOT flip status to playing.
+      events.add(
+        const RawPlayerSnapshot(
+          processingState: RawProcessingState.ready,
+          playing: true,
+          position: Duration.zero,
+          bufferedPosition: Duration.zero,
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(emitted.last.status, PlaybackStatus.loading);
+
+      setUrlGate.complete();
+      await pending;
+      await sub.cancel();
+    });
+
     test('emits error and skips data source when streams are empty', () async {
       const empty = Station(id: 2, name: 'Y', streams: []);
       final emitted = <PlaybackState>[];
