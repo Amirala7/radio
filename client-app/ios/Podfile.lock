@@ -1210,6 +1210,8 @@ PODS:
     - Firebase/Functions (= 12.12.0)
     - firebase_core
     - Flutter
+  - connectivity_plus (0.0.1):
+    - Flutter
   - Firebase/Auth (12.12.0):
     - Firebase/CoreOnly
     - FirebaseAuth (~> 12.12.0)
@@ -1414,6 +1416,7 @@ DEPENDENCIES:
   - audioplayers_darwin (from `.symlinks/plugins/audioplayers_darwin/darwin`)
   - cloud_firestore (from `.symlinks/plugins/cloud_firestore/ios`)
   - cloud_functions (from `.symlinks/plugins/cloud_functions/ios`)
+  - connectivity_plus (from `.symlinks/plugins/connectivity_plus/ios`)
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - Flutter (from `Flutter`)
@@ -1456,6 +1459,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/cloud_firestore/ios"
   cloud_functions:
     :path: ".symlinks/plugins/cloud_functions/ios"
+  connectivity_plus:
+    :path: ".symlinks/plugins/connectivity_plus/ios"
   firebase_auth:
     :path: ".symlinks/plugins/firebase_auth/ios"
   firebase_core:
@@ -1477,6 +1482,7 @@ SPEC CHECKSUMS:
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
   cloud_firestore: de8bda50bfce3c4ce0037ce5387586c1b5c20695
   cloud_functions: 845bcf3e3081df6aa4c86b778d60956b5b97500f
+  connectivity_plus: 2a701ffec2c0ae28a48cf7540e279787e77c447d
   Firebase: aa154fee4e9b8eac17aa42344988865b3e857d33
   firebase_auth: 5f9fe078dd3de8c80b82a291d49906a99c0f490c
   firebase_core: 40bc9f4c0ee3a28fbfb1e00e2ddaed744bb86388

@@ -409,6 +409,11 @@ class _LcdFavoriteHeart extends StatelessWidget {
   static const double _cell = 2;
   static const double _w = _cell * 7;
   static const double _h = _cell * 6;
+  // Bottom-padding reserved for tap target. Always included (even when
+  // idle) so the LCD's bottom row never changes height across states.
+  static const double _bottomPadding = 6;
+  static const double _slotW = _w;
+  static const double _slotH = _h + _bottomPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -416,7 +421,7 @@ class _LcdFavoriteHeart extends StatelessWidget {
       (vm) => vm.currentStation,
     );
     if (station == null) {
-      return const SizedBox(width: _w, height: _h);
+      return const SizedBox(width: _slotW, height: _slotH);
     }
     final isFavorite = context.select<FavoritesViewModel, bool>(
       (vm) => vm.isFavorite(station.id),
@@ -425,8 +430,7 @@ class _LcdFavoriteHeart extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: () => context.read<FavoritesViewModel>().toggle(station),
       child: Padding(
-        // Expand the tap target without shifting the visual position.
-        padding: const EdgeInsets.fromLTRB(0, 0, 0, 6),
+        padding: const EdgeInsets.only(bottom: _bottomPadding),
         child: SizedBox(
           width: _w,
           height: _h,
