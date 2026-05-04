@@ -7,8 +7,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../player/domain/pick_best_stream.dart';
 import '../../../player/presentation/view_models/player_view_model.dart';
 import '../../../stations/domain/entities/station.dart';
+import '../../../stations/domain/entities/station_location.dart';
 import 'favorite_heart_button.dart';
-import 'location_code.dart';
 import 'station_logo_tile.dart';
 
 enum _RowPlaybackState { idle, tuning, live }
@@ -56,21 +56,20 @@ class _Body extends StatelessWidget {
       if (vm.isPlaying) return _RowPlaybackState.live;
       return _RowPlaybackState.idle;
     });
-    final genres = (station.genre?.text ?? '').toUpperCase();
-    final locationCode = deriveLocationCode(station.location);
+    final genreText = _genreText(station.genre?.text);
+    final locationText = _fullLocationText(station.location);
     final picked = pickBestStream(station.streams);
     final bitrate = picked?.bitrate;
 
-    final third = <String>[];
+    final statusParts = <String>[];
     switch (playbackState) {
       case _RowPlaybackState.live:
-        third.add('LIVE');
+        statusParts.add('LIVE');
       case _RowPlaybackState.tuning:
-        third.add('TUNING');
+        statusParts.add('TUNING');
       case _RowPlaybackState.idle:
-        if (bitrate != null) third.add('${bitrate}KBPS');
+        if (bitrate != null) statusParts.add('${bitrate}KBPS');
     }
-    if (locationCode != null) third.add(locationCode);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,17 +90,48 @@ class _Body extends StatelessWidget {
             ),
           ],
         ),
-        if (genres.isNotEmpty) ...[
+        if (genreText != null) ...[
           const SizedBox(height: 2),
-          Text(genres, style: AppTypography.meta),
+          Text(
+            genreText,
+            style: AppTypography.meta,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
-        if (third.isNotEmpty) ...[
+        if (locationText != null) ...[
           const SizedBox(height: 2),
-          _MetaLine(parts: third, playbackState: playbackState),
+          Text(
+            locationText,
+            style: AppTypography.meta,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+        if (statusParts.isNotEmpty) ...[
+          const SizedBox(height: 2),
+          _MetaLine(parts: statusParts, playbackState: playbackState),
         ],
       ],
     );
   }
+}
+
+String? _genreText(String? raw) {
+  if (raw == null) return null;
+  final cleaned = raw.trim().toUpperCase();
+  return cleaned.isEmpty ? null : cleaned;
+}
+
+String? _fullLocationText(StationLocation? loc) {
+  final city = loc?.cityName?.trim();
+  final country = loc?.countryName?.trim();
+  final hasCity = city != null && city.isNotEmpty;
+  final hasCountry = country != null && country.isNotEmpty;
+  if (hasCity && hasCountry) return '$city, $country'.toUpperCase();
+  if (hasCity) return city.toUpperCase();
+  if (hasCountry) return country.toUpperCase();
+  return null;
 }
 
 class _LiveDot extends StatefulWidget {

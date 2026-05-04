@@ -11,6 +11,9 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../view_models/player_view_model.dart';
 
+const String _buttonAsset =
+    'assets/images/high-resolution-image-of-a-metallic-button-or-knob-with-a-brushed-metal-finish-ideal-for-industrial-mechanical-and-electronic-design-purposes-png.png.webp';
+
 class PowerButton extends StatefulWidget {
   const PowerButton({super.key});
 
@@ -62,16 +65,16 @@ class _PowerButtonState extends State<PowerButton> {
               child: AnimatedScale(
                 scale: _pressed ? 0.96 : 1,
                 duration: const Duration(milliseconds: 80),
-                child: SizedBox(
+                child: Image.asset(
+                  _buttonAsset,
                   width: 44,
                   height: 44,
-                  child: CustomPaint(
-                    painter: _ButtonPainter(pressed: _pressed),
-                  ),
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.medium,
                 ),
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
+            const SizedBox(width: AppSpacing.md),
             _Led(on: isPlaying),
           ],
         ),
@@ -107,44 +110,3 @@ class _Led extends StatelessWidget {
   );
 }
 
-class _ButtonPainter extends CustomPainter {
-  _ButtonPainter({required this.pressed});
-
-  final bool pressed;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = size.center(Offset.zero);
-    final outerR = size.shortestSide / 2;
-    final innerR = outerR - 4;
-
-    // Recessed dark ring around the button.
-    final ringPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [AppColors.bezelDark, AppColors.panelDark],
-        stops: const [0.9, 1.0],
-      ).createShader(Rect.fromCircle(center: center, radius: outerR));
-    canvas.drawCircle(center, outerR, ringPaint);
-
-    // Machined silver button face.
-    final btnPaint = Paint()
-      ..shader = RadialGradient(
-        center: const Alignment(-0.3, -0.5),
-        radius: 1.0,
-        colors: pressed
-            ? [AppColors.knobLight.withValues(alpha: 0.85), AppColors.knobDark]
-            : [AppColors.knobLight, AppColors.knobDark],
-      ).createShader(Rect.fromCircle(center: center, radius: innerR));
-    canvas.drawCircle(center, innerR, btnPaint);
-
-    // Subtle bottom-edge shadow inside the button.
-    final innerShadow = Paint()
-      ..color = const Color(0xFF000000).withValues(alpha: 0.25)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.inner, 1.5);
-    canvas.drawCircle(center, innerR - 0.5, innerShadow);
-  }
-
-  @override
-  bool shouldRepaint(covariant _ButtonPainter oldDelegate) =>
-      oldDelegate.pressed != pressed;
-}

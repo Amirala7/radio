@@ -21,7 +21,7 @@ class FilterBar extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xl,
-        vertical: AppSpacing.sm,
+        vertical: AppSpacing.xs,
       ),
       child: Row(
         children: [

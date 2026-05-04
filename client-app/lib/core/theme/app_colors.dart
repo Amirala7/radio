@@ -26,9 +26,10 @@ class AppColors {
   static const Color accentLive = Color(0xFFE96A2D);
   static const Color indicatorPower = Color(0xFFD43A2A);
 
-  // Knob metallics — top and bottom of the brushed gradient.
-  static const Color knobLight = Color(0xFFD9D5CC);
-  static const Color knobDark = Color(0xFF6E6862);
+  // Knob metallics — top and bottom of the brushed gradient. Tuned to
+  // match the play-button asset's cool silver palette.
+  static const Color knobLight = Color(0xFFC8CDC9);
+  static const Color knobDark = Color(0xFF5C6362);
 
   // Hairline divider between list rows.
   static const Color divider = Color(0xFFD9D2C5);

@@ -13,44 +13,67 @@ class HardwarePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewPadding.bottom;
-    return Container(
+    return SizedBox(
       height: AppSpacing.panelHeight + bottomInset,
-      decoration: const BoxDecoration(
-        color: AppColors.panelDarkTop,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: const LcdDisplay(),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                0,
-                AppSpacing.lg,
-                AppSpacing.sm,
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const PowerButton(),
-                  const SizedBox(width: AppSpacing.lg),
-                  Expanded(child: const VolumeSlider()),
-                  const SizedBox(width: AppSpacing.lg),
-                  SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: const SpeakerGrille(),
+          Container(
+            color: AppColors.panelDarkTop,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    0,
                   ),
-                ],
+                  child: const LcdDisplay(),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      0,
+                      AppSpacing.lg,
+                      AppSpacing.sm,
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const PowerButton(),
+                        const SizedBox(width: AppSpacing.lg),
+                        Expanded(child: const VolumeSlider()),
+                        const SizedBox(width: AppSpacing.lg),
+                        SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: const SpeakerGrille(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Top-edge highlight — reads as light catching the front lip
+          // of the hardware panel. Two pixels, fading downward.
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 2,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x80FFFFFF), Color(0x10FFFFFF)],
+                  ),
+                ),
               ),
             ),
           ),

@@ -4,6 +4,8 @@ import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import 'package:radio/core/audio/sfx_player.dart';
+import 'package:radio/core/network/connectivity_service.dart';
+import 'package:radio/features/favorites/presentation/view_models/favorites_view_model.dart';
 import 'package:radio/features/player/domain/entities/playback_state.dart';
 import 'package:radio/features/player/presentation/view_models/player_view_model.dart';
 import 'package:radio/features/player/presentation/widgets/lcd_display.dart';
@@ -11,6 +13,10 @@ import 'package:radio/features/stations/domain/entities/radio_stream.dart';
 import 'package:radio/features/stations/domain/entities/station.dart';
 
 class _MockPlayer extends Mock implements PlayerViewModel {}
+
+class _MockFavorites extends Mock implements FavoritesViewModel {}
+
+class _MockConnectivity extends Mock implements ConnectivityService {}
 
 class _FakeSfx implements SfxPlayer {
   @override
@@ -27,9 +33,15 @@ class _FakeSfx implements SfxPlayer {
 
 void main() {
   late _MockPlayer player;
+  late _MockFavorites favorites;
+  late _MockConnectivity connectivity;
 
   setUp(() {
     player = _MockPlayer();
+    favorites = _MockFavorites();
+    when(() => favorites.isFavorite(any())).thenReturn(false);
+    connectivity = _MockConnectivity();
+    when(() => connectivity.isOnline).thenReturn(true);
     if (GetIt.I.isRegistered<SfxPlayer>()) {
       GetIt.I.unregister<SfxPlayer>();
     }
@@ -45,8 +57,14 @@ void main() {
   Future<void> pump(WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: ChangeNotifierProvider<PlayerViewModel>.value(
-          value: player,
+        home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<PlayerViewModel>.value(value: player),
+            ChangeNotifierProvider<FavoritesViewModel>.value(value: favorites),
+            ChangeNotifierProvider<ConnectivityService>.value(
+              value: connectivity,
+            ),
+          ],
           child: const Scaffold(body: LcdDisplay()),
         ),
       ),

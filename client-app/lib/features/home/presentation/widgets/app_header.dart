@@ -10,9 +10,9 @@ class AppHeader extends StatelessWidget {
   Widget build(BuildContext context) => const Padding(
     padding: EdgeInsets.fromLTRB(
       AppSpacing.xl,
-      AppSpacing.lg,
-      AppSpacing.xl,
       AppSpacing.md,
+      AppSpacing.xl,
+      0,
     ),
     child: Text('RADIO', style: AppTypography.wordmark),
   );

@@ -5,9 +5,12 @@ import 'package:get_it/get_it.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/audio/sfx_player.dart';
+import '../../../../core/network/connectivity_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../favorites/presentation/view_models/favorites_view_model.dart';
+import '../../../stations/domain/entities/station.dart';
 import '../../domain/entities/playback_state.dart';
 import '../view_models/player_view_model.dart';
 import 'lcd_playing_indicator.dart';
@@ -27,14 +30,20 @@ final TextStyle _lcdDecorative = AppTypography.lcdSmall.copyWith(
 class _LcdDisplayState extends State<LcdDisplay> {
   PlaybackStatus? _lastStatus;
   bool _useTuning1 = true;
+  int _altIndex = 0;
+  Timer? _altTimer;
 
   // Locked geometry — every row reserves its space so the bezel never grows
   // or shrinks as state changes.
   static const double _bigRowHeight = 30;
 
+  // How long each alternate (location / genre / language) stays on screen.
+  static const Duration _altInterval = Duration(seconds: 4);
+
   @override
   void dispose() {
     GetIt.I<SfxPlayer>().stopLoop();
+    _altTimer?.cancel();
     super.dispose();
   }
 
@@ -49,6 +58,27 @@ class _LcdDisplayState extends State<LcdDisplay> {
     } else {
       unawaited(sfx.stopLoop());
     }
+
+    if (status == PlaybackStatus.playing) {
+      _startAltTimer();
+    } else {
+      _stopAltTimer();
+    }
+  }
+
+  void _startAltTimer() {
+    _altTimer?.cancel();
+    _altIndex = 0;
+    _altTimer = Timer.periodic(_altInterval, (_) {
+      if (!mounted) return;
+      setState(() => _altIndex++);
+    });
+  }
+
+  void _stopAltTimer() {
+    _altTimer?.cancel();
+    _altTimer = null;
+    _altIndex = 0;
   }
 
   @override
@@ -58,8 +88,18 @@ class _LcdDisplayState extends State<LcdDisplay> {
     );
     _onStatusChanged(state.status);
 
-    final big = _bigText(state);
-    final bottom = _bottomText(state);
+    final isOnline = context.select<ConnectivityService, bool>(
+      (s) => s.isOnline,
+    );
+    final String big;
+    final String bottom;
+    if (!isOnline) {
+      big = 'CONNECTION LOST';
+      bottom = 'CHECK NETWORK';
+    } else {
+      big = _bigText(state);
+      bottom = _bottomText(state);
+    }
 
     final screen = ClipRRect(
       borderRadius: BorderRadius.circular(2),
@@ -89,7 +129,10 @@ class _LcdDisplayState extends State<LcdDisplay> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       if (state.status == PlaybackStatus.playing) ...[
-                        const LcdPlayingIndicator(),
+                        Transform.translate(
+                          offset: const Offset(0, 3),
+                          child: const LcdPlayingIndicator(),
+                        ),
                         const SizedBox(width: 6),
                       ],
                       Expanded(
@@ -103,65 +146,85 @@ class _LcdDisplayState extends State<LcdDisplay> {
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(bottom, style: AppTypography.lcdSmall),
+                    const _LcdFavoriteHeart(),
                   ],
                 ),
               ],
             ),
           ),
-          // Inner shadow on the top edge — subtle "the LCD sits below the
-          // bezel lip" cue. Top-only and very light.
+          // Top inner shadow — the screen is recessed inside the bezel,
+          // so the bezel lip casts a shadow on the screen's top edge.
           const Positioned(
             left: 0,
             right: 0,
             top: 0,
-            height: 6,
+            height: 2,
             child: IgnorePointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0x1F000000), Color(0x00000000)],
+                    colors: [Color(0x80000000), Color(0x10000000)],
                   ),
                 ),
               ),
             ),
           ),
-          // Inner shadow on the top edge — subtle "the LCD sits below the
-          // bezel lip" cue. Top-only and very light.
+          // Left inner shadow — bezel wall casts shadow on the screen's
+          // left edge.
           const Positioned(
             left: 0,
-            right: 0,
             top: 0,
-            height: 20,
+            bottom: 0,
+            width: 2,
             child: IgnorePointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color.fromARGB(13, 0, 0, 0), Color(0x00000000)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [Color(0x80000000), Color(0x10000000)],
                   ),
                 ),
               ),
             ),
           ),
-          // Soft white highlight on the bottom edge — completes the inset
-          // bevel feel: dark above, light below.
+          // Right inner shadow — same on the right edge.
+          const Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: 2,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerRight,
+                    end: Alignment.centerLeft,
+                    colors: [Color(0x80000000), Color(0x10000000)],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Bottom inner highlight — reflected light catches the
+          // screen's bottom edge, completing the recessed feel.
           const Positioned(
             left: 0,
             right: 0,
             bottom: 0,
-            height: 6,
+            height: 2,
             child: IgnorePointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0x00FFFFFF), Color(0x1FFFFFFF)],
+                    colors: [Color(0x10FFFFFF), Color(0x80FFFFFF)],
                   ),
                 ),
               ),
@@ -185,10 +248,57 @@ class _LcdDisplayState extends State<LcdDisplay> {
       ),
       child: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-            child: screen,
+          // Bezel surface + top-white / bottom-black 3D edges, clipped to
+          // the bezel's rounded corners.
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+                  child: screen,
+                ),
+                // Top white highlight on the bezel lip.
+                const Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 2,
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0x80FFFFFF), Color(0x10FFFFFF)],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Bottom black shadow on the bezel underside.
+                const Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: 2,
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0x10000000), Color(0x80000000)],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
+          // Screws sit above the bezel highlights — kept outside the
+          // ClipRRect so they aren't clipped at the rounded corners.
           const Positioned(left: 4, top: 4, child: _Screw()),
           const Positioned(right: 4, top: 4, child: _Screw()),
           const Positioned(left: 4, bottom: 4, child: _Screw()),
@@ -220,13 +330,35 @@ class _LcdDisplayState extends State<LcdDisplay> {
       case PlaybackStatus.paused:
         return '';
       case PlaybackStatus.playing:
-        final loc = state.currentStation?.location;
+        final station = state.currentStation;
+        final loc = station?.location;
         final city = loc?.cityName?.toUpperCase().trim();
-        final country = loc?.countryCode?.toUpperCase().trim();
-        final tag = (city != null && city.isNotEmpty)
+        final countryName = loc?.countryName?.toUpperCase().trim();
+        final hasCity = city != null && city.isNotEmpty;
+        final hasCountry = countryName != null && countryName.isNotEmpty;
+        // Country code intentionally not used here — fall back to country
+        // name only when there's no city.
+        final locationText = hasCity
             ? city
-            : (country ?? '');
-        return tag.isEmpty ? 'LIVE' : 'LIVE - $tag';
+            : hasCountry
+                ? countryName
+                : null;
+        final genreText = station?.genre?.text?.toUpperCase().trim();
+        final hasGenre = genreText != null && genreText.isNotEmpty;
+        final firstLanguage = (station?.languages?.isNotEmpty ?? false)
+            ? station!.languages!.first
+            : null;
+        final languageText =
+            (firstLanguage?.name ?? firstLanguage?.code)?.toUpperCase().trim();
+        final hasLanguage = languageText != null && languageText.isNotEmpty;
+        final candidates = <String>[
+          ?locationText,
+          if (hasGenre) genreText,
+          if (hasLanguage) languageText,
+        ];
+        if (candidates.isEmpty) return 'LIVE';
+        final tag = candidates[_altIndex % candidates.length];
+        return 'LIVE - $tag';
       case PlaybackStatus.error:
         return state.error == null ? 'RETRY' : 'SOMETHING WENT WRONG';
     }
@@ -244,6 +376,95 @@ class _Screw extends StatelessWidget {
     fit: BoxFit.contain,
     filterQuality: FilterQuality.medium,
   );
+}
+
+class _LcdFavoriteHeart extends StatelessWidget {
+  const _LcdFavoriteHeart();
+
+  // 7 columns × 6 rows. Outer rows are the same; the difference between
+  // filled and outline lives in the interior cells.
+  // .##.##.
+  // #######
+  // #######
+  // .#####.
+  // ..###..
+  // ...#...
+  static const _filled = <List<int>>[
+    [0, 1, 1, 0, 1, 1, 0],
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1],
+    [0, 1, 1, 1, 1, 1, 0],
+    [0, 0, 1, 1, 1, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0],
+  ];
+  static const _outline = <List<int>>[
+    [0, 1, 1, 0, 1, 1, 0],
+    [1, 0, 0, 1, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [0, 1, 0, 0, 0, 1, 0],
+    [0, 0, 1, 0, 1, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0],
+  ];
+
+  static const double _cell = 2;
+  static const double _w = _cell * 7;
+  static const double _h = _cell * 6;
+
+  @override
+  Widget build(BuildContext context) {
+    final station = context.select<PlayerViewModel, Station?>(
+      (vm) => vm.currentStation,
+    );
+    if (station == null) {
+      return const SizedBox(width: _w, height: _h);
+    }
+    final isFavorite = context.select<FavoritesViewModel, bool>(
+      (vm) => vm.isFavorite(station.id),
+    );
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => context.read<FavoritesViewModel>().toggle(station),
+      child: Padding(
+        // Expand the tap target without shifting the visual position.
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 6),
+        child: SizedBox(
+          width: _w,
+          height: _h,
+          child: CustomPaint(
+            painter: _HeartPainter(grid: isFavorite ? _filled : _outline),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeartPainter extends CustomPainter {
+  _HeartPainter({required this.grid});
+
+  final List<List<int>> grid;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cols = grid[0].length;
+    final rows = grid.length;
+    final cellW = size.width / cols;
+    final cellH = size.height / rows;
+    final paint = Paint()..color = AppColors.textLcd;
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        if (grid[r][c] == 1) {
+          canvas.drawRect(
+            Rect.fromLTWH(c * cellW, r * cellH, cellW, cellH),
+            paint,
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _HeartPainter old) => old.grid != grid;
 }
 
 class _LcdMarquee extends StatefulWidget {
