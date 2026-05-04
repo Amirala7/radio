@@ -4,6 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import 'package:radio/features/favorites/presentation/view_models/favorites_state.dart';
 import 'package:radio/features/favorites/presentation/view_models/favorites_view_model.dart';
+import 'package:radio/features/favorites/presentation/widgets/pixel_heart.dart';
 import 'package:radio/features/home/presentation/widgets/station_row.dart';
 import 'package:radio/features/player/presentation/view_models/player_view_model.dart';
 import 'package:radio/features/stations/domain/entities/radio_stream.dart';
@@ -63,7 +64,7 @@ void main() {
   testWidgets('tap heart toggles favourite without playing', (tester) async {
     final station = _dummyStation();
     await pumpRow(tester, station);
-    await tester.tap(find.byIcon(Icons.favorite_border));
+    await tester.tap(find.byType(PixelHeart));
     verify(() => favorites.toggle(station)).called(1);
     verifyNever(() => player.play(any()));
   });

@@ -71,6 +71,13 @@ class PlayerRepositoryImpl implements PlayerRepository {
       );
     } finally {
       if (token > _completed) _completed = token;
+      // Replay the data source's current state through the now-open gate.
+      // Fast-prepared streams reach ready+playing entirely inside
+      // setSourceAndPlay's await window — every state event for the new
+      // source is dropped by the gate, and just_audio doesn't re-emit a
+      // stable state. Without this nudge the LCD stays on TUNING even
+      // though audio is already audible.
+      _dataSource.refresh();
     }
   }
 

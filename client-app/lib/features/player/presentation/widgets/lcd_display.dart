@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../favorites/presentation/view_models/favorites_view_model.dart';
+import '../../../favorites/presentation/widgets/pixel_heart.dart';
 import '../../../stations/domain/entities/station.dart';
 import '../../domain/entities/playback_state.dart';
 import '../view_models/player_view_model.dart';
@@ -311,7 +312,12 @@ class _LcdDisplayState extends State<LcdDisplay> {
   String _bigText(PlaybackState state) {
     switch (state.status) {
       case PlaybackStatus.idle:
-        return 'STANDBY';
+        // Once a station has been picked, keep its name on the LCD even
+        // after stop — only the very first launch shows STANDBY.
+        final stoppedStation = state.currentStation;
+        return stoppedStation == null
+            ? 'STANDBY'
+            : stoppedStation.name.toUpperCase();
       case PlaybackStatus.loading:
         return 'TUNING…';
       case PlaybackStatus.playing:
@@ -325,7 +331,7 @@ class _LcdDisplayState extends State<LcdDisplay> {
   String _bottomText(PlaybackState state) {
     switch (state.status) {
       case PlaybackStatus.idle:
-        return 'TAP A STATION';
+        return state.currentStation == null ? 'TAP A STATION' : '';
       case PlaybackStatus.loading:
       case PlaybackStatus.paused:
         return '';
@@ -381,39 +387,14 @@ class _Screw extends StatelessWidget {
 class _LcdFavoriteHeart extends StatelessWidget {
   const _LcdFavoriteHeart();
 
-  // 7 columns × 6 rows. Outer rows are the same; the difference between
-  // filled and outline lives in the interior cells.
-  // .##.##.
-  // #######
-  // #######
-  // .#####.
-  // ..###..
-  // ...#...
-  static const _filled = <List<int>>[
-    [0, 1, 1, 0, 1, 1, 0],
-    [1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1],
-    [0, 1, 1, 1, 1, 1, 0],
-    [0, 0, 1, 1, 1, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0],
-  ];
-  static const _outline = <List<int>>[
-    [0, 1, 1, 0, 1, 1, 0],
-    [1, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [0, 1, 0, 0, 0, 1, 0],
-    [0, 0, 1, 0, 1, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0],
-  ];
-
-  static const double _cell = 2;
-  static const double _w = _cell * 7;
-  static const double _h = _cell * 6;
+  static const double _cellSize = 2;
+  static const double _heartW = _cellSize * 7;
+  static const double _heartH = _cellSize * 6;
   // Bottom-padding reserved for tap target. Always included (even when
   // idle) so the LCD's bottom row never changes height across states.
   static const double _bottomPadding = 6;
-  static const double _slotW = _w;
-  static const double _slotH = _h + _bottomPadding;
+  static const double _slotW = _heartW;
+  static const double _slotH = _heartH + _bottomPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -431,44 +412,14 @@ class _LcdFavoriteHeart extends StatelessWidget {
       onTap: () => context.read<FavoritesViewModel>().toggle(station),
       child: Padding(
         padding: const EdgeInsets.only(bottom: _bottomPadding),
-        child: SizedBox(
-          width: _w,
-          height: _h,
-          child: CustomPaint(
-            painter: _HeartPainter(grid: isFavorite ? _filled : _outline),
-          ),
+        child: PixelHeart(
+          filled: isFavorite,
+          color: AppColors.textLcd,
+          cellSize: _cellSize,
         ),
       ),
     );
   }
-}
-
-class _HeartPainter extends CustomPainter {
-  _HeartPainter({required this.grid});
-
-  final List<List<int>> grid;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cols = grid[0].length;
-    final rows = grid.length;
-    final cellW = size.width / cols;
-    final cellH = size.height / rows;
-    final paint = Paint()..color = AppColors.textLcd;
-    for (var r = 0; r < rows; r++) {
-      for (var c = 0; c < cols; c++) {
-        if (grid[r][c] == 1) {
-          canvas.drawRect(
-            Rect.fromLTWH(c * cellW, r * cellH, cellW, cellH),
-            paint,
-          );
-        }
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _HeartPainter old) => old.grid != grid;
 }
 
 class _LcdMarquee extends StatefulWidget {

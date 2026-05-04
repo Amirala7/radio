@@ -9,6 +9,12 @@ typedef AudioPlayerFactory = AudioPlayer Function();
 /// one AudioPlayer instance per process — keeping SFX on a separate
 /// engine avoids contention over that single slot.
 ///
+/// On iOS the AVAudioSession is process-singleton, so every SFX player
+/// is configured with [AudioContextConfigFocus.mixWithOthers] — that
+/// translates to `AVAudioSessionOptions.mixWithOthers`, which lets the
+/// click play over the station without interrupting it or stealing the
+/// NowPlaying entry.
+///
 /// One-shots (click, knob) are pre-loaded for fast playback.
 /// Loops (tuning) use dispose-and-create — the only way to guarantee
 /// audio actually stops is to throw the player away.
@@ -17,6 +23,10 @@ class SfxPlayer {
     : _factory = playerFactory ?? AudioPlayer.new;
 
   static const _oneShotIds = <SfxId>[SfxId.click, SfxId.switchKnob];
+
+  static final AudioContext _nonDisruptiveContext = AudioContextConfig(
+    focus: AudioContextConfigFocus.mixWithOthers,
+  ).build();
 
   final AudioPlayerFactory _factory;
   final Map<SfxId, AudioPlayer> _oneShots = {};
@@ -38,6 +48,7 @@ class SfxPlayer {
   Future<void> init() async {
     for (final id in _oneShotIds) {
       final p = _factory();
+      await p.setAudioContext(_nonDisruptiveContext);
       await p.setReleaseMode(ReleaseMode.stop);
       await p.setSource(AssetSource(assetFor(id)));
       _oneShots[id] = p;
@@ -56,6 +67,7 @@ class SfxPlayer {
     final p = _factory();
     _loop = p;
     try {
+      await p.setAudioContext(_nonDisruptiveContext);
       await p.setReleaseMode(ReleaseMode.loop);
       await p.play(AssetSource(assetFor(id)));
     } catch (_) {

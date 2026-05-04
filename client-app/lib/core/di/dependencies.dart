@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get_it/get_it.dart';
-import 'package:just_audio/just_audio.dart';
 
 import '../audio/sfx_player.dart';
 import '../auth/auth_service.dart';
@@ -16,16 +15,21 @@ import '../../features/genres/data/datasources/genre_remote_data_source.dart';
 import '../../features/genres/data/repositories/genre_repository_impl.dart';
 import '../../features/genres/domain/repositories/genre_repository.dart';
 import '../../features/player/data/datasources/audio_player_data_source.dart';
+import '../../features/player/data/datasources/radio_audio_handler.dart';
 import '../../features/player/data/repositories/player_repository_impl.dart';
 import '../../features/player/domain/repositories/player_repository.dart';
 import '../../features/stations/data/datasources/station_remote_data_source.dart';
 import '../../features/stations/data/repositories/station_repository_impl.dart';
 import '../../features/stations/domain/repositories/station_repository.dart';
 
-void configureDependencies({required AuthService authService}) {
+void configureDependencies({
+  required AuthService authService,
+  required RadioAudioHandler audioHandler,
+}) {
   final di = GetIt.I;
 
   di.registerSingleton<AuthService>(authService);
+  di.registerSingleton<RadioAudioHandler>(audioHandler);
   di.registerLazySingleton<CloudFunctionsClient>(() => CloudFunctionsClient());
   di.registerLazySingleton<ConnectivityService>(ConnectivityService.new);
 
@@ -39,7 +43,7 @@ void configureDependencies({required AuthService authService}) {
     () => FavoritesRemoteDataSource(FirebaseFirestore.instance),
   );
   di.registerLazySingleton<AudioPlayerDataSource>(
-    () => AudioPlayerDataSource(player: AudioPlayer()),
+    () => AudioPlayerDataSource(di()),
   );
 
   di.registerLazySingleton<StationRepository>(

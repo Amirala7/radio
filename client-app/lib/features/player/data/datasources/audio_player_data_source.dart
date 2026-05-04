@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:just_audio/just_audio.dart';
-import 'package:just_audio_background/just_audio_background.dart';
+
+import 'radio_audio_handler.dart';
 
 enum RawProcessingState { idle, loading, buffering, ready, completed }
 
@@ -21,21 +22,34 @@ class RawPlayerSnapshot {
   final String? errorMessage;
 }
 
-/// Thin wrapper over [AudioPlayer]. Catches just_audio errors and emits them
-/// as [RawPlayerSnapshot] entries with `errorMessage` set, rather than throwing.
+/// Adapts the [RadioAudioHandler]'s underlying `just_audio` player into
+/// the [RawPlayerSnapshot] stream the player repository consumes.
+///
+/// Why this is a thin facade over the handler rather than owning the
+/// player itself: lock-screen / notification metadata is driven via
+/// `audio_service`, which requires the player to live inside a
+/// `BaseAudioHandler`. Splitting concerns keeps the handler focused on
+/// platform integration and leaves the snapshot mapping (the contract
+/// the repo depends on) right here.
 class AudioPlayerDataSource {
-  AudioPlayerDataSource({AudioPlayer? player})
-    : _player = player ?? AudioPlayer() {
+  AudioPlayerDataSource(this._handler) {
     _attach();
   }
 
-  final AudioPlayer _player;
+  final RadioAudioHandler _handler;
+  AudioPlayer get _player => _handler.player;
+
   final StreamController<RawPlayerSnapshot> _events =
       StreamController<RawPlayerSnapshot>.broadcast();
 
+  StreamSubscription<PlayerState>? _stateSub;
+  StreamSubscription<Duration>? _positionSub;
+  StreamSubscription<Duration>? _bufferedSub;
+  StreamSubscription<PlaybackEvent>? _eventSub;
+
+  PlayerState _state = PlayerState(false, ProcessingState.idle);
   Duration _position = Duration.zero;
   Duration _buffered = Duration.zero;
-  PlayerState _state = PlayerState(false, ProcessingState.idle);
   String? _lastError;
 
   Stream<RawPlayerSnapshot> get events => _events.stream;
@@ -48,80 +62,75 @@ class AudioPlayerDataSource {
   }) async {
     _lastError = null;
     try {
-      await _player.setAudioSource(
-        AudioSource.uri(
-          Uri.parse(url),
-          tag: MediaItem(
-            id: id,
-            title: title,
-            artUri: (artUrl != null && artUrl.isNotEmpty)
-                ? Uri.tryParse(artUrl)
-                : null,
-          ),
-        ),
+      await _handler.openStation(
+        id: id,
+        url: url,
+        title: title,
+        artUrl: artUrl,
       );
-    } on PlayerException catch (e) {
-      _lastError = e.message ?? 'PlayerException(${e.code})';
-      _emit();
-      return;
-    } on PlayerInterruptedException catch (e) {
-      _lastError = e.message ?? 'PlayerInterruptedException';
-      _emit();
-      return;
-    } catch (e) {
-      _lastError = e.toString();
-      _emit();
-      return;
-    }
-    // For live streams, _player.play() returns a Future that only resolves
-    // when playback ends (i.e. stop() is called). Awaiting it would block
-    // setSourceAndPlay forever and freeze any caller relying on its completion
-    // (e.g. the repo's switch-token gate). Fire-and-forget with separate
-    // error handling.
-    unawaited(_safePlay());
-  }
-
-  Future<void> _safePlay() async {
-    try {
-      await _player.play();
-    } on PlayerException catch (e) {
-      _lastError = e.message ?? 'PlayerException(${e.code})';
-      _emit();
-    } on PlayerInterruptedException catch (e) {
-      _lastError = e.message ?? 'PlayerInterruptedException';
-      _emit();
     } catch (e) {
       _lastError = e.toString();
       _emit();
     }
   }
 
-  Future<void> pause() => _player.pause();
+  Future<void> pause() => _handler.pause();
 
-  Future<void> resume() => _player.play();
+  Future<void> resume() => _handler.play();
 
-  Future<void> stop() => _player.stop();
+  Future<void> stop() async {
+    await _handler.stop();
+    // After stop just_audio holds onto the source in `idle` processing
+    // state but `playing` flips to false. The repo treats that as idle,
+    // so the next power tap re-runs setSourceAndPlay() rather than
+    // attempting resume() on a torn-down stream.
+    _emit();
+  }
 
-  Future<void> setVolume(double v) => _player.setVolume(v.clamp(0.0, 1.0));
+  Future<void> setVolume(double v) => _handler.setVolume(v);
+
+  /// Re-emit the current state. Pulls `playerState` synchronously so the
+  /// snapshot reflects the latest just_audio state even when the
+  /// playerStateStream listener hasn't caught up yet.
+  ///
+  /// Used by the repository immediately after the station-switch gate
+  /// drops: fast-prepared streams reach ready+playing entirely inside
+  /// setAudioSource's await, so every state event was gated and dropped.
+  /// just_audio doesn't re-emit when state is stable, so without this
+  /// nudge the repo would stay on loading forever.
+  void refresh() {
+    _state = _player.playerState;
+    _emit();
+  }
 
   Future<void> dispose() async {
+    await _stateSub?.cancel();
+    await _positionSub?.cancel();
+    await _bufferedSub?.cancel();
+    await _eventSub?.cancel();
     await _events.close();
-    await _player.dispose();
+    // Player lifetime is owned by the handler (process-singleton via
+    // AudioService.init). Don't dispose it here.
   }
 
   void _attach() {
-    _player.playerStateStream.listen((s) {
+    _stateSub = _player.playerStateStream.listen((s) {
       _state = s;
       _emit();
     });
-    _player.positionStream.listen((p) {
+    _positionSub = _player.positionStream.listen((p) {
       _position = p;
-      _emit();
     });
-    _player.bufferedPositionStream.listen((p) {
-      _buffered = p;
-      _emit();
+    _bufferedSub = _player.bufferedPositionStream.listen((b) {
+      _buffered = b;
     });
+    _eventSub = _player.playbackEventStream.listen(
+      (_) {},
+      onError: (Object e, StackTrace _) {
+        _lastError = e.toString();
+        _emit();
+      },
+    );
   }
 
   void _emit() {

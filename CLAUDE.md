@@ -93,10 +93,12 @@ Unit tests required for: ViewModels, UseCases, Repositories. Mock at layer bound
 
 ## Audio engines (two players, no overlap)
 
-`just_audio_background` only supports **one `AudioPlayer` per process**. We honour that hard limit by isolating the engines:
+The single station-playback engine is bound to the OS background-service slot, so we isolate the engines:
 
-- **Station playback** — `just_audio` + `just_audio_background`. Only `AudioPlayerDataSource` constructs an `AudioPlayer`, and every `setAudioSource` carries a `MediaItem` tag (id / title / artUri). That powers lock-screen + notification controls and keeps audio alive when backgrounded. iOS needs `UIBackgroundModes: [audio]`; Android needs the foreground media-playback service + `FOREGROUND_SERVICE_MEDIA_PLAYBACK` permission.
-- **Sound effects** — `audioplayers`. `SfxPlayer` (in `core/audio/`) handles UI clicks, knob ticks, and the tuning loop. Never use `just_audio` here; it would steal the BG slot.
+- **Station playback** — `just_audio` wrapped in a custom `RadioAudioHandler` (extends `audio_service`'s `BaseAudioHandler`). Only `RadioAudioHandler` constructs an `AudioPlayer`; `AudioPlayerDataSource` is a thin facade that adapts the player's streams into the `RawPlayerSnapshot` the repository consumes. The handler pushes `mediaItem.add(...)` explicitly per `openStation` so station switches update the lock-screen tag (works around the `.distinct(TrackInfo)` filter in `just_audio_background` that would otherwise keep the lock-screen stuck on the first station). It also masks transient `ja.ProcessingState.idle` events as `ready` while no `stop()` was requested — `audio_service`'s `_observePlaybackState` interprets idle as "stop the service" and clears `MPNowPlayingInfoCenter` for the rest of the process. iOS needs `UIBackgroundModes: [audio]`; Android needs `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `MainActivity` extending `AudioServiceActivity`, and the `com.ryanheise.audioservice.AudioService` + `MediaButtonReceiver` registered in `AndroidManifest.xml`.
+- **Sound effects** — `audioplayers`. `SfxPlayer` (in `core/audio/`) handles UI clicks, knob ticks, and the tuning loop. Each player is configured with `AudioContextConfig(focus: AudioContextConfigFocus.mixWithOthers)` so it can't yank the AVAudioSession or `MPNowPlayingInfoCenter` slot from the station. Never use `just_audio` here; it would contend for the BG slot.
+
+**Known iOS limitation:** the lock-screen widget shows on first background but vanishes after the app is foregrounded and re-backgrounded. iOS picks "now playing app" via opaque heuristics at the moment of backgrounding; `setActive(true)`, re-publishing `playbackState`, and pause/play toggles all fail to re-claim source-app status from the Dart layer. Fixing it would require custom platform channels around `MPRemoteCommandCenter`. Documented in `RadioAudioHandler`'s class doc.
 
 ## Connectivity
 

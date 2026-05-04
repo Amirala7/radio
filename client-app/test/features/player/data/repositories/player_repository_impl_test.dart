@@ -38,6 +38,7 @@ void main() {
     when(() => ds.pause()).thenAnswer((_) async {});
     when(() => ds.resume()).thenAnswer((_) async {});
     when(() => ds.stop()).thenAnswer((_) async {});
+    when(() => ds.refresh()).thenAnswer((_) {});
     repo = PlayerRepositoryImpl(ds);
   });
 
@@ -105,6 +106,67 @@ void main() {
       await pending;
       await sub.cancel();
     });
+
+    test(
+      'refreshes data source after switch gate drops to unstick fast streams',
+      () async {
+        // Reproduces the bug where a fast-prepared station played but the
+        // LCD stayed on TUNING: every state event for the new source fires
+        // inside setSourceAndPlay's await, hits the closed gate, and gets
+        // dropped — leaving the repo stuck on the initial loading emit.
+        final setUrlGate = Completer<void>();
+        when(
+          () => ds.setSourceAndPlay(
+            id: any(named: 'id'),
+            url: any(named: 'url'),
+            title: any(named: 'title'),
+            artUrl: any(named: 'artUrl'),
+          ),
+        ).thenAnswer((_) => setUrlGate.future);
+        // refresh() in the real data source pulls the latest player state
+        // and re-emits. Simulate that with a ready+playing snapshot — the
+        // state a fast-prepared stream has settled into by the time the
+        // repo asks for a refresh.
+        when(() => ds.refresh()).thenAnswer((_) {
+          events.add(
+            const RawPlayerSnapshot(
+              processingState: RawProcessingState.ready,
+              playing: true,
+              position: Duration.zero,
+              bufferedPosition: Duration.zero,
+            ),
+          );
+        });
+
+        final emitted = <PlaybackState>[];
+        final sub = repo.state.listen(emitted.add);
+
+        final pending = repo.play(station);
+        await Future<void>.delayed(Duration.zero);
+        // While the gate is up, the new source's transitions are dropped.
+        events.add(
+          const RawPlayerSnapshot(
+            processingState: RawProcessingState.ready,
+            playing: true,
+            position: Duration.zero,
+            bufferedPosition: Duration.zero,
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+        expect(emitted.last.status, PlaybackStatus.loading);
+
+        // Drop the gate. The repo's finally must call refresh() so the
+        // settled state surfaces.
+        setUrlGate.complete();
+        await pending;
+        await Future<void>.delayed(Duration.zero);
+
+        verify(() => ds.refresh()).called(1);
+        expect(emitted.last.status, PlaybackStatus.playing);
+
+        await sub.cancel();
+      },
+    );
 
     test('emits error and skips data source when streams are empty', () async {
       const empty = Station(id: 2, name: 'Y', streams: []);

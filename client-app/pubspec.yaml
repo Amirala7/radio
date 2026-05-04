@@ -40,8 +40,8 @@ dependencies:
   cloud_firestore: ^6.3.0
   provider: ^6.1.5+1
   get_it: ^8.0.0
-  just_audio: ^0.10.5
-  just_audio_background: ^0.0.1-beta.16
+  just_audio: ^0.10.4
+  audio_service: ^0.18.18
   audioplayers: ^6.1.0
   freezed_annotation: ^3.1.0
   json_annotation: ^4.11.0

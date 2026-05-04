@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../favorites/presentation/view_models/favorites_view_model.dart';
+import '../../../favorites/presentation/widgets/pixel_heart.dart';
 import '../../../stations/domain/entities/station.dart';
 
 class FavoriteHeartButton extends StatelessWidget {
@@ -24,11 +25,11 @@ class FavoriteHeartButton extends StatelessWidget {
               duration: const Duration(milliseconds: 160),
               transitionBuilder: (child, anim) =>
                   FadeTransition(opacity: anim, child: child),
-              child: Icon(
-                isFavorite ? Icons.favorite : Icons.favorite_border,
+              child: PixelHeart(
                 key: ValueKey(isFavorite),
-                size: 20,
+                filled: isFavorite,
                 color: AppColors.textPrimary,
+                cellSize: 3,
               ),
             ),
           ),
